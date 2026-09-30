@@ -1,0 +1,7 @@
+.venv/
+.venv-layout/
+__pycache__/
+layout/work/
+sim/test/
+*.log
+.DS_Store

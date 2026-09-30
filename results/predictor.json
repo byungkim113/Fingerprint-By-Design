@@ -1,0 +1,79 @@
+[
+ {
+  "design": "dac",
+  "frac": 0.9066547831468981,
+  "apply": true,
+  "helps": true,
+  "delta": {
+   "-40": 0.22644444444444456,
+   "85": 0.3802222222222222
+  },
+  "correct": true
+ },
+ {
+  "design": "dac2",
+  "frac": 0.8237020093961179,
+  "apply": true,
+  "helps": true,
+  "delta": {
+   "-40": 0.39022222222222225,
+   "85": 0.27422222222222226
+  },
+  "correct": true
+ },
+ {
+  "design": "dac_ztc",
+  "frac": 0.8640945077523348,
+  "apply": true,
+  "helps": true,
+  "delta": {
+   "-40": 0.15133333333333332,
+   "85": 0.28688888888888886
+  },
+  "correct": true
+ },
+ {
+  "design": "dac_hi",
+  "frac": 0.9828789057400873,
+  "apply": true,
+  "helps": true,
+  "delta": {
+   "-40": 0.4802222222222222,
+   "85": 0.5075555555555555
+  },
+  "correct": true
+ },
+ {
+  "design": "dac_lo",
+  "frac": 0.32584645571360543,
+  "apply": false,
+  "helps": false,
+  "delta": {
+   "-40": -0.04777777777777781,
+   "85": -0.04222222222222216
+  },
+  "correct": true
+ },
+ {
+  "design": "dac_sl",
+  "frac": 0.33088742889261347,
+  "apply": false,
+  "helps": false,
+  "delta": {
+   "-40": -0.06377777777777782,
+   "85": -0.046666666666666745
+  },
+  "correct": true
+ },
+ {
+  "design": "dac_casL",
+  "frac": 0.9461867799959647,
+  "apply": true,
+  "helps": true,
+  "delta": {
+   "-40": 0.32666666666666666,
+   "85": 0.23644444444444443
+  },
+  "correct": true
+ }
+]

@@ -1,0 +1,21 @@
+{
+ "name": "nn_resnet_t27_s0",
+ "only": "dac,lo,pa",
+ "snr": 20,
+ "train_t": "27",
+ "arch": "resnet",
+ "n_train": 40,
+ "n_test": 10,
+ "epochs": 30,
+ "seed": 0,
+ "val": 0.938,
+ "test": {
+  "-40": 0.2675,
+  "0": 0.656,
+  "27": 0.94,
+  "55": 0.6045,
+  "85": 0.1855
+ },
+ "n_classes": 200,
+ "chance": 0.005
+}

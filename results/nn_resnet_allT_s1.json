@@ -1,0 +1,21 @@
+{
+ "name": "nn_resnet_allT_s1",
+ "only": "dac,lo,pa",
+ "snr": 20,
+ "train_t": "-40,0,27,55,85",
+ "arch": "resnet",
+ "n_train": 40,
+ "n_test": 10,
+ "epochs": 30,
+ "seed": 1,
+ "val": 0.854,
+ "test": {
+  "-40": 0.861,
+  "0": 0.8915,
+  "27": 0.904,
+  "55": 0.9055,
+  "85": 0.829
+ },
+ "n_classes": 200,
+ "chance": 0.005
+}
