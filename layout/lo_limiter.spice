@@ -1,0 +1,12 @@
+.include "/Users/byungkim/.volare/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice"
+.subckt lo_limiter VIN LO LOB VPWR VGND
+XCc VIN G sky130_fd_pr__cap_mim_m3_1 W=3 L=3 MF=1 m=1
+XRfb1 G S1 VGND sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRfb2 S1 S2 VGND sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRfb3 S2 S3 VGND sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRfb4 S3 A1 VGND sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XL1 G VGND VGND VPWR VPWR A1 sky130_fd_sc_hd__inv_2
+XL2 A1 VGND VGND VPWR VPWR A2 sky130_fd_sc_hd__inv_4
+XL3 A2 VGND VGND VPWR VPWR LOB sky130_fd_sc_hd__inv_8
+XL4 LOB VGND VGND VPWR VPWR LO sky130_fd_sc_hd__inv_8
+.ends lo_limiter

@@ -26,6 +26,10 @@ CONFIGS = {
     "dac_ztc": dict(w=0.5, l=1.0, iref=7.1e-6),
     "dac_lo": dict(w=0.5, l=1.0, iref=1e-6),
     "dac_casL": dict(w=0.5, l=1.0, iref=10e-6, cas=(0.5, 0.5, 1.3)),
+    # fresh held-out designs (never used to develop any method)
+    "dac_big": dict(w=1.0, l=2.0, iref=10e-6),
+    "dac_mid": dict(w=0.5, l=0.5, iref=15e-6),
+    "dac_cas2": dict(w=1.0, l=1.0, iref=20e-6, cas=(1.0, 0.5, 1.3)),
 }
 
 

@@ -202,3 +202,242 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   (dac_casL .946 apply, helps; dac2 .824 apply, helps). Caveat: threshold set on 5 designs,
   only 2 held out, and the two groups are far apart (<=0.33 vs >=0.82).
   "Correct" = sign of M2 effect at both extremes, not the 50% criterion.
+- 2026-09-30: PRE-REGISTERED M4 "simulation-informed drift covariance" (before running):
+  Drift field from the four WRONG-corner design populations only (noise-free): for every
+  design-time chip and T != 27C, d = f(T) - f(27C) (common + per-chip parts together).
+  Sigma_T = mean(d d^T) (uncentred, so the shared shift is penalised too).
+  Receiver: enrollment noise covariance S_w (Ledoit-Wolf on within-chip residuals, 27C)
+  + lambda * Sigma_T with lambda = 1 fixed (no tuning); nearest enrolled chip mean under
+  the Mahalanobis distance of S = S_w + Sigma_T.
+  Pass per design: >=50% gap recovered at both -40 and 85C (3 seeds, SNR 20, 150 chips).
+  "Generalizes" = all 7 designs. Secondary: no-harm = M4 >= baseline at both extremes on
+  every design. Script: analysis/drift_cov.py.
+- 2026-09-30: M4 RESULTS (analysis/drift_cov.py, results/drift_cov_<design>.json, 3 seeds):
+  control M4_0 (lambda=0) tracks the LDA baseline on all designs (classifier check OK).
+  design     base -40/27/85    M4 -40/27/85    gap rec -40/85   pass  no-harm
+  D1 dac     .63/.99/.50       .94/.96/.90     87% / 81%        PASS  yes
+  D2 dac2    .12/1.0/.35       .86/.92/.86     84% / 79%        PASS  yes
+  D5 ztc     .69/1.0/.58       .95/.97/.91     86% / 80%        PASS  yes
+  D4 hi      .07/.93/.02       .66/.68/.56     68% / 59%        PASS  yes
+  D7 lo      .41/1.0/.77       .98/1.0/1.0     96% / 100%       PASS  yes
+  D3 sl      .79/1.0/.76       1.0/1.0/1.0     100% / 100%      PASS  yes
+  D6 casL    .04/.98/.01       .63/.76/.49     63% / 49%        FAIL (85C, 1.2 pts short)  yes
+  PRE-REGISTERED VERDICT: 6/7 pass -> "partial" (majority), NOT "generalizes" (needs 7/7).
+  No-harm met on 7/7. Cost at 27C is large on low-mismatch designs (D4 .93->.68,
+  D6 .98->.76, D2 1.0->.92). lambda 0.25/4 are diagnostics only (0.25 trades less 27C
+  cost for less extreme-T gain); not used for the verdict.
+- 2026-09-30: LITERATURE CHECK (novelty of M4). Temperature-robust RFF methods found all use
+  measured data: multi-temperature training, per-temperature models, temperature-sensor
+  input, or CFO removal (TeRFF, RF-TESI, TEA-RFF, arXiv 2607.25070 and its cited work).
+  Closest: "RF Impairment Model-Based IoT PHY Identification for Domain Generalization"
+  (2022) and arXiv 2607.09760 (physics-informed, cross-environment) use behavioural
+  impairment models for augmentation, not transistor-level simulation, not temperature.
+  M4's math = WCCN / nuisance-covariance (Hatch et al. 2006; NAP) -> must cite.
+  Not checked: MDPI Electronics 15(6):1309 (2026 review on feature drift modelling, 403).
+- 2026-09-30: FRESH HELD-OUT DESIGNS (defined before any method sees them):
+  F1 dac_big  : simple W1/L2, Iref 10u (large area, low mismatch)
+  F2 dac_mid  : simple W0.5/L0.5, Iref 15u
+  F3 dac_cas2 : cascode src W1/L1 + cas W1/L0.5, Iref 20u, Vcas 1.3 V
+- 2026-09-30: PRE-REGISTERED A and B (written before running either):
+  A = M4A: lambda chosen per design from design-time data only. Leave-one-wrong-corner-out:
+      Sigma_T from 3 corners, held-out corner's 50 chips simulated at SNR 20 (20 enroll bursts
+      at 27C, 5 test bursts per T), grid lambda in {0,.03,.1,.25,.5,1,2,4}; pick lambda with
+      the best mean accuracy over the 5 temperatures averaged over the 4 folds. Deployed tt
+      chips are never used for selection.
+  B = M5: temperature-marginalised likelihood. Score(chip c) = log sum_k N(v; mu_c + m(T_k),
+      S_w + C(T_k)), uniform over T_k on a 5 C grid -40..85; m(T) = mean wrong-corner drift,
+      C(T) = covariance of chip-specific drift around m(T); both linearly interpolated in T
+      from the simulated temperatures. When testing at 0 or 55 C the simulated point at that
+      temperature is EXCLUDED from the interpolation (no exact-temperature leakage); -40/85
+      are the range ends and stay. No free parameters.
+  Criteria (each method): pass = >=50% gap recovered at both extremes; secondary = 27C
+      accuracy within 2 points of baseline; no-harm at both extremes.
+  The 7 earlier designs are DEVELOPMENT designs (already seen). The generalization claim is
+  made ONLY on the 3 fresh designs F1-F3: "generalizes" = pass on 3/3 fresh designs.
+- 2026-09-30: ENVIRONMENT MOVE. Desktop is iCloud-synced; disk ~90% full -> macOS evicted
+  project files (dataless placeholders) -> EOFError crashes in parallel runs. Fixes:
+  (1) generalize._npz loads each archive once into memory and closes it; (2) evicted data
+  re-downloaded (brctl); (3) Python envs rebuilt OUTSIDE iCloud: ~/venvs/rffp (py3.12) and
+  ~/venvs/rffp-layout (py3.11) from requirements.txt / requirements-layout.txt (versions
+  taken from installed dist-info names). Desktop alias "venvs" -> ~/venvs. Old .venv dirs
+  deleted. Verified: drift_test seed 0 reproduces exactly; dac_array DRC 0 (Magic+KLayout),
+  LVS match. Use ~/venvs/rffp/bin/python and ~/venvs/rffp-layout/bin/python from now on.
+- 2026-09-30: HELD-OUT VERDICT (fresh F1-F3, 3 seeds, SNR 20; methods fixed beforehand):
+  design      base -40/27/85   M4 -40/27/85    M4A -40/27/85   M5 -40/27/85
+  F1 dac_big  .40/.93/.26      .80/.85/.73 P   .81/.91/.67 P   .83/.90/.80 P (27C cost 3.8)
+  F2 dac_mid  .74/1.0/.68      .97/.99/.95 P   .96/1.0/.93 P   .98/1.0/.97 P (cost 0.3)
+  F3 dac_cas2 .01/.95/.01      .57/.63/.46 F   .55/.77/.44 F   .61/.84/.46 F (85C 48.3%)
+  All three methods: 2/3 fresh designs -> pre-registered "generalizes" (3/3) NOT met.
+  No-harm: 3/3 for all methods. lambda selected 0.25 on all fresh designs.
+  Cascoded DACs (D6 dev, F3 fresh) fail every method at 85C (~46-49% gap recovered):
+  their fingerprint is ~1% identifiable at the extremes without correction.
+- 2026-09-30: FULL TABLE (accuracy % at -40/27/85C; P/F = >=50% gap at both extremes):
+         base        M4          A (M4A)     B (M5)      M4/A/B
+  D1     63/99/50    94/95/90    93/98/88    95/98/93    P/P/P
+  D2     12/100/35   86/92/86    86/96/85    87/99/92    P/P/P
+  D5     69/100/58   95/97/91    93/99/89    96/99/94    P/P/P
+  D4     7/93/2      66/68/56    69/79/56    73/83/59    P/P/P
+  D7     41/100/77   98/100/100  98/100/100  99/100/100  P/P/P
+  D3     79/100/76   100/100/100 100/100/100 100/100/100 P/P/P
+  D6     4/98/1      63/76/49    64/82/48    70/92/45    F/F/F
+  F1     40/93/26    80/85/73    81/91/67    83/90/80    P/P/P   (held out)
+  F2     74/100/68   97/99/95    96/100/93   98/100/97   P/P/P   (held out)
+  F3     1/95/1      57/63/46    55/76/44    61/84/46    F/F/F   (held out)
+  All three methods 8/10 overall, 2/3 held out. B (M5) best: highest extreme-T accuracy on
+  9/10 designs and lowest 27C cost on most. Failures D6, F3: NOT "all cascodes" (D2 is a
+  cascode and passes); common factor = near-zero baseline at the extremes (1-4%), i.e.
+  fingerprint tiny relative to drift. Correction to earlier note claiming cascodes fail.
+- 2026-10-02: PRE-REGISTERED (before running):
+  (1) RC-CR PEX: extract layout/rccr.gds with parasitic C (Magic), simulate nominal (tt, no
+      mismatch) I/Q gain imbalance and phase error at 200 MHz vs the schematic at -40/27/85C,
+      and 50-chip mismatch MC for chip-to-chip spread. Report the shift; "layout-safe" if the
+      nominal phase error moves < 1 deg and the chip-to-chip spread changes < 20%.
+  (2) NOISE SWEEP for B (M5): SNR 10, 15, 25, 30 dB on D1, F1, F2 (3 seeds). Baseline = the
+      same Mahalanobis matcher with no drift model (lambda = 0). Operating range claimed =
+      lowest SNR at which M5 passes (>=50% gap at both extremes) AND no-harm on all 3 designs.
+  (3) LEARNED FEATURES: replace DAC level-deviation features with the 128-d embedding of the
+      27C-trained CNN (penultimate layer); apply M5 unchanged in that space (drift model from
+      wrong-corner design chips passed through the same CNN, noise-free, mean of 4 bursts).
+      Designs D1 and F2, 3 seeds, SNR 20. Pass = >=50% gap at both extremes vs the CNN's own
+      embedding baseline (no drift model). Compared also to the CNN softmax accuracy.
+- 2026-10-02: RC-CR PEX (sim/rccr_pex.py; layout/work/rccr_pex/rccr_pexc.spice). Magic C-only
+  extraction (connectivity identical to schematic: 4 devices + 5 parasitic C: VI-VSS 9.1 fF,
+  IN-VQ 5.9 fF, VQ-VSS 4.7 fF, IN-VSS 3.2 fF). R extraction (extresist) corrupted net names
+  (VI merged into VQ) -> not used; C-only is a stated limitation.
+  Result: layout adds a COMMON offset (+0.34 dB gain, -0.31 deg phase) identical at -40/27/85C
+  and on every chip; temperature drift of the imbalance unchanged (0.40 dB over -40..85C);
+  chip-to-chip spread gain -13%, phase +1.5%. Pre-registered verdict: LAYOUT-SAFE.
+- 2026-10-02: NOISE SWEEP for B (M5), 3 seeds, gap recovered -40/85C (P/F), all no-harm:
+          10 dB        15 dB        20 dB (earlier)  25 dB        30 dB
+  D1      30/29 F      59/61 P      88/88 P          98/98 P      100/100 P
+  F1      58/36 F      64/57 P      81/81 P          90/93 P      97/98 P
+  F2      22/22 F      62/60 P      91/91 P          99/99 P      100/100 P
+  Pre-registered operating range: B passes on all 3 designs from 15 dB up; fails at 10 dB
+  (but never hurts, unlike the earlier projection method). 27C cost at 15 dB: 3-9 pts.
+- 2026-10-02: LEARNED FEATURES (CNN 128-d embedding + M5), 3 seeds, SNR 20:
+          softmax -40/27/85   BASE -40/27/85   M5 -40/27/85   gap rec    verdict
+  D1      33/95/18            53/98/39         70/98/61       38%/38%    FAIL (no-harm, 0 cost)
+  F2      38/95/23            56/98/45         67/98/57       28%/22%    FAIL (no-harm, 0 cost)
+  -> design-time drift model still adds +12..22 pts at the extremes on learned features with
+  no 27C cost, but pre-registered target NOT met. DAC-aware features are needed for the
+  strong result (D1 95/98/93, F2 98/100/97). Hand-built-feature limitation stands, softened.
+- 2026-10-02: USER DECISION: build the full transmitter core now (accepting notebook-time risk).
+  Scope ("full chip" = transmitter core macro): data bits -> I/Q unary current-steering DACs
+  WITH data switches -> current-mode Gilbert switching quads (DAC currents = mixer tails) ->
+  shared RC load (I+Q summing) -> PA driver -> RF out; LO path: external LO -> RC-CR ->
+  inverter-chain limiters -> LO_I/LO_Ib/LO_Q/LO_Qb. Bias: mirror from reference current.
+  OUT of scope: PLL/VCO (external LO input), pads/ESD/Caravel padframe.
+  Steps: (C1) transistor-level transient of whole chain, 1 chip; (C2) validate the Python
+  transmitter model against it (downconvert RF, compare per-chip I/Q errors), few chips x T;
+  (C3) layout of new blocks (switches, quads, limiters, loads, PA); (C4) top integration,
+  DRC/LVS. Notebook must still ship by Oct 8.
+- 2026-10-02: C1 DONE. sim/tx_full.py: whole transmitter at transistor level (2x31 DAC cells +
+  data switches, 2 Gilbert switching quads with DAC tails, shared RC load, PA diff pair,
+  RC-CR + inverter limiters). 32 DAC samples simulate in 37 s. Nominal tt: LO rail-to-rail,
+  mixer CM 1.35 V, RF 0.6 Vpp. Error vs ideal codes (normalised by |gain| 0.37): 13.2% gain
+  only; 12.0% with I/Q image; 8.5% with 1-sample memory. Systematic quadrature phase error
+  8.8 deg (image -22 dB) from limiter/RC-CR loading; sample memory from load/switch settling.
+  KEY MODEL DISCREPANCY FOUND: limiters remove LO amplitude imbalance, which the Python
+  model passes through. C2 will test whether per-chip fingerprints match the model.
+- 2026-10-02: PRE-REGISTERED C2 (model validation, before running): 8 MC chips (tt_mm, seeds
+  1-8) x {-40, 27, 85C}, 128-sample QPSK burst, noise-free. Per chip: in-situ op unit currents;
+  transistor-level RF -> downconvert -> one-hot level fit -> I and Q DAC level-deviation
+  patterns. Chip-specific part = pattern minus mean over the 8 chips at that T. Model
+  prediction = cumulative-unit-current deviation from the same chip's op currents (what the
+  Python transmitter model uses). PASS if median per-chip correlation (chip-specific parts,
+  pooled I and Q) >= 0.8 at every temperature. Also report per-chip I/Q gain-imbalance
+  agreement (model incl. vs excl. LO amplitude imbalance).
+- 2026-10-02: LAYOUT dac_sw_array (layout/dac_sw_array.py): 3 rows (source W0.5/L1, SP and SN switches W1/L0.15) x 31 + ref; per-column met2 strap with hand-drawn 0.15 um via1 inside the 0.29 um met1 bars. 89.6 x 12.9 um. Magic DRC 0, KLayout DRC 0, LVS MATCH (94 devices). Bug fixed: corner-wise grid snapping made 0.16 um cuts -> centre-snapped exact shapes.
+- 2026-10-02: tx_full REAL now = layout parts: wide xhigh/high_po resistors (200k = 4 x 35.25 um serpentine), MIM caps, PA mirror + divider, LO limiters from sky130_fd_sc_hd inv_2/inv_4/inv_8/inv_8. Nominal 32-sample: RF 0.43 Vpp, EVM 10.3%, quad phase err 4.1 deg. All passive cells DRC 0 in Magic+KLayout; mixer_quad, pa_pair, pa_mirror DRC 0 (both tools), LVS match.
+- 2026-10-02: LAYOUT lo_limiter (layout/limiter.py): sky130_fd_sc_hd tap|inv_2|inv_4|inv_8|inv_8|tap + Cc (MIM 3x3) + Rfb (xhigh_po_1p41 4x35.25 serpentine, 200k). 20.1 x 45.6 um. Magic DRC 0, KLayout 0, LVS MATCH. Fixes: g/a1 pins 0.46 um apart -> g routed out on met2 before rising; a dangling met3 left the cap floating (LVS caught it); std-cell labels stripped (became ports when flat); resistor guard ring = substrate = VGND (netlist corrected). Blocks done: dac_sw_array, mixer_quad, pa_pair, pa_mirror, lo_limiter, rccr, 8 passive cells.
+- 2026-10-02: ASSEMBLY A dac_mixer (layout/dac_mixer.py, route.py): dac_sw_array + mixer_quad, met2 stubs/met3 tracks, DAC tails into quad sources. 108.3 x 18.2 um. Magic DRC 0, KLayout 0, LVS MATCH (98 devices). Fixes: quad S/D bars only 0.94 um wide (vias at +-0.25 not +-0.35); gLayout met2->met3 via_stack makes 1.5 um pads -> own via2_min/via3_min.
+- 2026-10-02: ASSEMBLY B lo_path (layout/lo_path.py): rccr + 2 lo_limiters, VI/VQ on met4 into limiter caps, VDD/VSS rails tied (VDD met3, VSS met3+met4). 54.4 x 121.4 um. DRC: only the 2 known rpm.1 from rccr's 0p35 resistors (both tools). LVS MATCH (24 devices). Bug found by LVS: VDD/VSS met3 routes crossed (short) -> VSS vertical on met4, west of VDD vertical.
+- 2026-10-02: ASSEMBLY C out_net (layout/out_net.py): mixer loads, load caps, PA coupling caps,
+  bias resistors + divider, PA pair, PA loads, tail mirror. 118.3 x 76.4 um. DRC 0 (both),
+  LVS MATCH (16). Fixes: met3 min-area patches; PAB drain/gate via2 0.25 um apart -> joined on
+  met2; metal VSS was separate from the substrate (LVS VSS_uq1) -> tied at a guard-ring tap.
+- 2026-10-02: TOP LEVEL tx_core (layout/tx_core.py): 2 x dac_mixer (data pins renamed DI/DBI,
+  DQ/DBQ) + lo_path + out_net. 307.3 x 139.4 um. LVS MATCH, 236 devices (full transmitter
+  core, data bits to RF out). DRC: only the 2 known rpm.1 from rccr's res_high_po_0p35 (both
+  tools); everything else clean after met3 min-area patches. Out of scope: PLL, pads/ESD,
+  data decoder (62 thermometer inputs per channel are macro pins).
+- 2026-10-02: MEMORY INCIDENT: tx_validate MC session had no 'save' -> ngspice kept every node/branch at 20 ps for every chip and never freed plots (~1.4 GB/chip); 3 parallel runs reached ~40-50 GB on a 17 GB Mac and froze it. Logs were only written at the end, so op currents of the 20 finished chips were lost. Fix: delete all/op/ac, then 'save' 6 vectors before tran, 'destroy all' after wrdata; log streamed to disk; max 2 parallel. Test: 0.46 GB peak per ngspice. Full validation relaunched.
+- 2026-10-02: C2 MODEL VALIDATION RESULT (sim/tx_validate.py; 8 chips x 3 T, full transistor-level
+  transmitter = layout circuit, mismatch on every device): median per-chip correlation of the
+  chip-specific DAC level pattern, transistor-level vs Python model (unit-current prediction):
+  -40C 0.52 | 27C 0.55 | 85C 0.59 (range 0.25-0.84). PRE-REGISTERED VERDICT: FAIL (target 0.8).
+  Diagnostics: (1) transistor-level patterns are stable per chip across T (self-corr 0.96-0.99;
+  model 0.996-0.999) -> real, repeatable signature, not measurement noise; (2) wrong-chip pairs
+  -0.07 +- 0.26 -> 0.55 is above chance; (3) restricting to well-sampled levels: 0.57-0.65 ->
+  not a sampling artefact. INTERPRETATION: the real circuit's chip-specific fingerprint has
+  substantial content the model omits (likely data-switch / mixer / limiter mismatch and its
+  interaction with settling); DAC unit currents explain ~30% of the pattern variance.
+  Consequence: method-B results are model-based; transfer to the real circuit is NOT yet shown.
+- 2026-10-02: USER DECISION (plan): (1) finish the fingerprint-shaping analog parts first:
+  bias reference (replaces ideal 10/10/100 uA), LO input buffer, output buffer; each verified
+  (sim, layout, DRC, LVS) and integrated into tx_core / tx_full. (2) then tests on the
+  fingerprint-complete core: identification on transistor-level chips, block attribution of
+  the extra fingerprint, model extension + method-B rerun if needed. (3) then digital control
+  (decoder/registers/SPI, OpenLane) + Caravan pads + final verification (no effect on results).
+  Bias reference design: beta-multiplier (constant-gm) self-biased reference with start-up;
+  PMOS mirror outputs source 10 uA (I DAC), 10 uA (Q DAC), 100 uA (PA tail) into the existing
+  diode-connected references. Its own mismatch and temperature dependence enter the fingerprint.
+- 2026-10-02: BIAS REFERENCE (sim/bias_ref.py): beta-multiplier, M1 2/1, M2 8/1, pmos mirror 2/1,
+  start-up (long pmos + 2 nmos). Rs xhigh_po (-16% over T) gave 6.8->13.5 uA over -40..85C
+  (+99%); switched to n-diffusion res_generic_nd W1/L80 (+19.5% over T): 8.98 -> 10.55 uA
+  (+17%), 9.94 uA @27C. MC 50 chips: 7.1% current spread, I/Q ratio sd 2.9%. Start-up OK
+  (VDD ramp 1 us). Outputs: 10 uA (I), 10 uA (Q), 100 uA (PA, 10x).
+- 2026-10-02: FINGERPRINT-COMPLETE ANALOG CORE in sim (tx_full REAL): on-chip bias reference
+  (prefixed nodes; an unprefixed 'pg' once shorted it to the PA gate), LO input buffer
+  (off-chip 50-ohm source -> 2 pF MIM -> NMOS follower W20 biased VDD/2, 200 uA sink) and
+  output buffer (NMOS followers W40, 2 mA sinks each, off-chip 10 pF + 50 ohm loads).
+  Nominal 32-sample: RF into 50 ohm 0.165 Vpp diff, EVM 10.7%, quad phase err 3.2 deg.
+  Remaining ideal/off-chip: VDD, LO source, data bits, 50-ohm loads.
+- 2026-10-02: device rows bias_n, bias_p (PMOS own n-wells, 10-finger x10 mirrors), lo_buf, out_buf: DRC 0 both tools, LVS MATCH. Sim updated to the same finger counts (nf). bias_ref mirror branches as nf=N (a single wide finger mirrored ~15% low: 84 vs 97 uA).
+- 2026-10-02: LAYOUT bias_ref (layout/bias_block.py): bias_p row + mirrored bias_n row + r_nd80, channels top/middle/bottom + left trunks. 100.2 x 68.9 um. DRC 0 (Magic+KLayout), LVS MATCH (13). Fixes: tie vias at ring bar centre (label = edge); resistor terminals already have met1 (no 2nd mcon); MS1's lower tie bar (floating n-well found by LVS).
+- 2026-10-02: LAYOUT lo_buf_blk + out_buf_blk (layout/buffers.py). out_buf_blk 20.0 x 24.9 um (OFP/OFN followers, OSP/OSN sinks, OBB diode); lo_buf_blk 69.2 x 68.1 um (2 pF MIM c_31, 2 x 50k xhigh-poly divider, LOF/LOB/LOS). Both DRC 0 (Magic+KLayout), LVS MATCH (5 / 6 devices). Fixes: diode gate joined to its drain stub by a met2 jog (two parallel stubs were 0.07 um apart); no extra via3 on the MIM strap (the cell's own via3 column already ties C2 met3->met4; met3 track lands on the bottom plate).
+- 2026-10-02: STEP 1 LAYOUT DONE - fingerprint-complete tx_core (layout/tx_core.py; old version saved as layout/work/tx_core_v1.py). bias_ref at (75,-0.3) between the channels, lo_buf_blk at (-30,20), out_buf_blk at (315,25). Ideal IREF_I/IREF_Q/IREF_PA pins removed: BI -> I DAC gate bus (met4 + stack), BQ -> Q gate bus (met2 up), BPA -> PA mirror and BOB -> output buffer (met4 down, met3 under the OUTP/OUTN met4 trunks), BLO over the LO path on met3. LO_PAD -> buffer -> LO path IN; PA drains RFP/RFN -> follower gates. VDD met4 run at y=45 extended to all three blocks. Top pins now LO_PAD, TXP, TXN, VDD, VSS + 124 data bits. 408.5 x 142.0 um. LVS MATCH (260 devices = 236 + 13 + 6 + 5); DRC Magic 2 / KLayout 2, both the known rpm.1 on the RC-CR 0p35 resistors. Figure: figures/klayout_tx_core.png.
+  Open for step 3: VSS is still joined only through each block's substrate taps (no metal VSS grid); ok for LVS, must become a metal grid before PEX / tape-out. rpm.1 flags remain.
+- 2026-10-02: PILOT for step 2 (on the OLD C2 waveforms, 8 chips, circuit without bias/buffers; used
+  only to choose burst length and SNR, no new-circuit data seen): 128-sample bursts are noise-
+  dominated; 2304-sample bursts (18 frames, same length as the model bursts) at 20 dB: 81% @27C
+  with a ~2-pt temperature gap (noise-dominated); at 30 dB: 100% @27C, 85-88% at -40/85C.
+- 2026-10-02: PRE-REGISTERED STEP 2a (transistor-level identification + method B, before running):
+  Circuit: tx_full REAL = fingerprint-complete core (on-chip bias reference, LO input buffer,
+  output buffer; same netlist as the LVS-matched layout). Deployed chips: tt_mm seeds 1-16 at
+  T = {-40, 0, 27, 55, 85} C. Design-time chips (for B only): ss_mm seeds 101-106 and ff_mm seeds
+  101-106 at the same 5 T (wrong corners, different mismatch draws, no deployed chip reused).
+  Stimulus: the 128-sample QPSK frame of C2 (qpsk_codes seed 1). Per chip/T also recorded for
+  the later attribution study: op DAC unit currents (2x31), bias node voltages (gi, gq, pab,
+  lob_bias, ob_bias), RC-CR ac outputs (vi, vq).
+  Burst = 18 frames (2304 samples) of the chip's noise-free downconverted output, random carrier
+  phase + independent complex AWGN per sample at SNR (rel. to the chip's mean power); receiver
+  LS complex gain on the known codes; features = one-hot level fit over codes 5..26, I and Q
+  ladders, real and imag residuals from their best straight lines (88 features).
+  Enroll 27C, 40 bursts/chip; test 10 bursts/chip at each T; 3 noise seeds (0,1,2).
+  BASE = Mahalanobis nearest mean with Ledoit-Wolf within-chip covariance (from enrollment).
+  B = robust2 M5 mixture over the 5 C grid, m(T)/C(T) from the 12 design-time chips (noise-free
+  features), interior exclusion when testing at 0 and 55 C.
+  PRIMARY SNR 30 dB (secondary 20 dB, reported).
+  Criteria: (I) identifiable: BASE accuracy at 27C >= 0.90 (16 chips, 30 dB).
+  (II) B: gap recovery >= 50% at both -40 and 85C, 27C cost <= 2 pts, no harm at any T.
+  If BASE's gap at an extreme is < 5 pts, recovery there is reported as "not testable".
+  Run order: deployed first (5 sessions x 16 chips), then design-time (10 x 6); 2 ngspice max.
+- 2026-10-02: BUG (found in step-2 smoke test): the LO source had no AC magnitude, so every 'ac'
+  readout of vi/vq was 0 - including all of C2 (C2's verdict did not use them; its secondary LO
+  imbalance report was never valid). Fixed: Vlo 'dc 0 ac {lo_amp} sin(...)' (transient unchanged).
+- 2026-10-02: STEP 2a sweep launched (sim/tx_ident.py sim deployed design; log results/tx_ident_sim.log;
+  15 sessions, 2 parallel, waveforms in sim/work/tx/ident_<corner>_T<T>/).
+- 2026-10-02: STEP 2a RESULT (sim/tx_ident.py; 16 tt_mm chips + 12 design-time chips x 5 T, 140 runs,
+  all completed; results/tx_ident_snr30.json, _snr20.json). Accuracy -40/0/27/55/85 C:
+  30 dB (primary): BASE 0.944/1.000/1.000/1.000/1.000 | B 1.000/1.000/1.000/1.000/1.000
+  20 dB:           BASE 0.896/1.000/0.998/0.990/0.994 | B 0.981/0.998/0.996/0.985/0.975
+  PRE-REGISTERED VERDICTS: (I) identifiable: PASS at both SNRs. (II) B: NOT TESTABLE (BASE gap at
+  85C is 0.0 pts @30 dB and 0.4 pts @20 dB, under the 5-pt rule). Where a gap exists (-40C) B
+  recovers 100% (30 dB) and 84% (20 dB); at 20 dB B costs 1.9 pts at 85C and 0.5 at 55C (harm).
+  Diagnostic (noise-free features): chip spread 0.0050/feature (pilot old circuit: 0.0030);
+  drift from 27C: -40C 0.0020, 85C 0.0010 -> the complete core's fingerprint is ~1.7x larger
+  and drift is small relative to it, so the temperature problem is mild on this circuit.
+  Interpretation: the fingerprint-complete transistor core is reliably identifiable; temperature
+  robustness is only stressed at -40C, where design-time B fixes it. Attribution (2b) should
+  explain the larger fingerprint (bias/buffer content?) using the recorded op/ac data.

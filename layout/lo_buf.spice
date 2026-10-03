@@ -1,0 +1,5 @@
+.subckt lo_buf LOF_D LOF_G LOF_S LOB_D LOB_G LOB_S LOS_D LOS_G LOS_S VSS
+XLOF LOF_D LOF_G LOF_S VSS sky130_fd_pr__nfet_01v8 W=20.0 L=0.15 nf=2 m=1
+XLOB LOB_D LOB_G LOB_S VSS sky130_fd_pr__nfet_01v8 W=1.0 L=0.5 nf=1 m=1
+XLOS LOS_D LOS_G LOS_S VSS sky130_fd_pr__nfet_01v8 W=2.0 L=0.5 nf=1 m=1
+.ends lo_buf

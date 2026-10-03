@@ -20,6 +20,7 @@ usage: python generalize.py <design> [--seeds 0,1,2]
 """
 import argparse
 import json
+from functools import lru_cache
 
 import numpy as np
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
@@ -32,8 +33,13 @@ WRONG = ["ss_mm", "ff_mm", "ss_hh_mm", "ff_ll_mm"]
 K_BOUNDS = (0.7, 1.4)
 
 
+@lru_cache(maxsize=None)
 def _npz(name):
-    return np.load(DATA / f"{name}.npz")
+    """Load an archive once, copy its arrays into memory and close the file
+    (np.load keeps the handle open; repeated loads across parallel jobs ran out
+    of readable handles and raised EOFError)."""
+    with np.load(DATA / f"{name}.npz") as z:
+        return {k: z[k] for k in z.files}
 
 
 def deployed(design):

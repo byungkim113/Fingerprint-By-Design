@@ -1,0 +1,6 @@
+.subckt mixer_quad Q1_D Q1_G Q1_S Q2_D Q2_G Q2_S Q3_D Q3_G Q3_S Q4_D Q4_G Q4_S VSS
+XQ1 Q1_D Q1_G Q1_S VSS sky130_fd_pr__nfet_01v8 W=4.0 L=0.15 nf=1 m=1
+XQ2 Q2_D Q2_G Q2_S VSS sky130_fd_pr__nfet_01v8 W=4.0 L=0.15 nf=1 m=1
+XQ3 Q3_D Q3_G Q3_S VSS sky130_fd_pr__nfet_01v8 W=4.0 L=0.15 nf=1 m=1
+XQ4 Q4_D Q4_G Q4_S VSS sky130_fd_pr__nfet_01v8 W=4.0 L=0.15 nf=1 m=1
+.ends mixer_quad

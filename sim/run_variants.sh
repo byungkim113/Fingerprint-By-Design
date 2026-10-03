@@ -15,5 +15,5 @@ one() {  # design
   done
 }
 export -f one; export PY T
-printf "%s\n" dac_ztc dac_hi dac_lo dac_sl dac_casL dac2 | xargs -P 2 -I{} bash -c 'one {}'
+printf "%s\n" ${DESIGNS:-dac_ztc dac_hi dac_lo dac_sl dac_casL dac2} | xargs -P 3 -I{} bash -c 'one {}'
 echo ALL DONE

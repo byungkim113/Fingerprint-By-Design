@@ -5,3 +5,4 @@ layout/work/
 sim/test/
 *.log
 .DS_Store
+sim/work/

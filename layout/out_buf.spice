@@ -1,0 +1,7 @@
+.subckt out_buf OFP_D OFP_G OFP_S OFN_D OFN_G OFN_S OBB_D OBB_G OBB_S OSP_D OSP_G OSP_S OSN_D OSN_G OSN_S VSS
+XOFP OFP_D OFP_G OFP_S VSS sky130_fd_pr__nfet_01v8 W=40.0 L=0.15 nf=4 m=1
+XOFN OFN_D OFN_G OFN_S VSS sky130_fd_pr__nfet_01v8 W=40.0 L=0.15 nf=4 m=1
+XOBB OBB_D OBB_G OBB_S VSS sky130_fd_pr__nfet_01v8 W=1.0 L=0.5 nf=1 m=1
+XOSP OSP_D OSP_G OSP_S VSS sky130_fd_pr__nfet_01v8 W=20.0 L=0.5 nf=2 m=1
+XOSN OSN_D OSN_G OSN_S VSS sky130_fd_pr__nfet_01v8 W=20.0 L=0.5 nf=2 m=1
+.ends out_buf

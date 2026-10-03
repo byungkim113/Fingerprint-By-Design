@@ -1,0 +1,10 @@
+.subckt bias_p M3_D M3_G M3_S M3_B M4_D M4_G M4_S M4_B MS1_D MS1_G MS1_S MS1_B MOI_D MOI_G MOI_S MOI_B MOQ_D MOQ_G MOQ_S MOQ_B MOPA_D MOPA_G MOPA_S MOPA_B MOLO_D MOLO_G MOLO_S MOLO_B MOOB_D MOOB_G MOOB_S MOOB_B
+XM3 M3_D M3_G M3_S M3_B sky130_fd_pr__pfet_01v8 W=2.0 L=1.0 nf=1 m=1
+XM4 M4_D M4_G M4_S M4_B sky130_fd_pr__pfet_01v8 W=2.0 L=1.0 nf=1 m=1
+XMS1 MS1_D MS1_G MS1_S MS1_B sky130_fd_pr__pfet_01v8 W=0.42 L=10.0 nf=1 m=1
+XMOI MOI_D MOI_G MOI_S MOI_B sky130_fd_pr__pfet_01v8 W=2.0 L=1.0 nf=1 m=1
+XMOQ MOQ_D MOQ_G MOQ_S MOQ_B sky130_fd_pr__pfet_01v8 W=2.0 L=1.0 nf=1 m=1
+XMOPA MOPA_D MOPA_G MOPA_S MOPA_B sky130_fd_pr__pfet_01v8 W=20.0 L=1.0 nf=10 m=1
+XMOLO MOLO_D MOLO_G MOLO_S MOLO_B sky130_fd_pr__pfet_01v8 W=20.0 L=1.0 nf=10 m=1
+XMOOB MOOB_D MOOB_G MOOB_S MOOB_B sky130_fd_pr__pfet_01v8 W=20.0 L=1.0 nf=10 m=1
+.ends bias_p

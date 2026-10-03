@@ -1,0 +1,6 @@
+.subckt bias_n M1_D M1_G M1_S M2_D M2_G M2_S MS2_D MS2_G MS2_S MS3_D MS3_G MS3_S VSS
+XM1 M1_D M1_G M1_S VSS sky130_fd_pr__nfet_01v8 W=2.0 L=1.0 nf=1 m=1
+XM2 M2_D M2_G M2_S VSS sky130_fd_pr__nfet_01v8 W=8.0 L=1.0 nf=1 m=1
+XMS2 MS2_D MS2_G MS2_S VSS sky130_fd_pr__nfet_01v8 W=1.0 L=0.5 nf=1 m=1
+XMS3 MS3_D MS3_G MS3_S VSS sky130_fd_pr__nfet_01v8 W=1.0 L=0.5 nf=1 m=1
+.ends bias_n

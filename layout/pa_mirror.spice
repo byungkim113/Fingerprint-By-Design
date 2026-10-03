@@ -1,0 +1,4 @@
+.subckt pa_mirror PAB_D PAB_G PAB_S PAT_D PAT_G PAT_S VSS
+XPAB PAB_D PAB_G PAB_S VSS sky130_fd_pr__nfet_01v8 W=1.0 L=0.5 nf=1 m=1
+XPAT PAT_D PAT_G PAT_S VSS sky130_fd_pr__nfet_01v8 W=10.0 L=0.5 nf=1 m=1
+.ends pa_mirror

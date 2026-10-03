@@ -1,0 +1,4 @@
+.subckt pa_pair PA1_D PA1_G PA1_S PA2_D PA2_G PA2_S VSS
+XPA1 PA1_D PA1_G PA1_S VSS sky130_fd_pr__nfet_01v8 W=10.0 L=0.15 nf=1 m=1
+XPA2 PA2_D PA2_G PA2_S VSS sky130_fd_pr__nfet_01v8 W=10.0 L=0.15 nf=1 m=1
+.ends pa_pair
