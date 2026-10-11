@@ -113,10 +113,10 @@ XL4 LOB VGND VGND VPWR VPWR LO sky130_fd_sc_hd__inv_8
 .ends lo_limiter_sub
 
 .subckt lo_path IN LO_I LOB_I LO_Q LOB_Q VDD VSS
-XRi IN VI VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1
+XRi IN VI VSS sky130_fd_pr__res_high_po_1p41 L=25.6 mult=1 m=1
 XCi VI VSS sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
-XCq IN VQ sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
-XRq VQ VSS VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1
+XCq VQ IN sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
+XRq VQ VSS VSS sky130_fd_pr__res_high_po_1p41 L=20.3 mult=1 m=1
 XLI VI LO_I LOB_I VDD VSS lo_limiter_sub
 XLQ VQ LO_Q LOB_Q VDD VSS lo_limiter_sub
 .ends lo_path
@@ -173,7 +173,75 @@ XOSP TXP BOB VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=0.5 nf=2 m=1
 XOSN TXN BOB VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=0.5 nf=2 m=1
 .ends out_buf_blk
 
-.subckt tx_core LO_PAD TXP TXN VDD VSS DI0 DBI0 DI1 DBI1 DI2 DBI2 DI3 DBI3 DI4 DBI4 DI5 DBI5 DI6 DBI6 DI7 DBI7 DI8 DBI8 DI9 DBI9 DI10 DBI10 DI11 DBI11 DI12 DBI12 DI13 DBI13 DI14 DBI14 DI15 DBI15 DI16 DBI16 DI17 DBI17 DI18 DBI18 DI19 DBI19 DI20 DBI20 DI21 DBI21 DI22 DBI22 DI23 DBI23 DI24 DBI24 DI25 DBI25 DI26 DBI26 DI27 DBI27 DI28 DBI28 DI29 DBI29 DI30 DBI30 DQ0 DBQ0 DQ1 DBQ1 DQ2 DBQ2 DQ3 DBQ3 DQ4 DBQ4 DQ5 DBQ5 DQ6 DBQ6 DQ7 DBQ7 DQ8 DBQ8 DQ9 DBQ9 DQ10 DBQ10 DQ11 DBQ11 DQ12 DBQ12 DQ13 DBQ13 DQ14 DBQ14 DQ15 DBQ15 DQ16 DBQ16 DQ17 DBQ17 DQ18 DBQ18 DQ19 DBQ19 DQ20 DBQ20 DQ21 DBQ21 DQ22 DBQ22 DQ23 DBQ23 DQ24 DBQ24 DQ25 DBQ25 DQ26 DBQ26 DQ27 DBQ27 DQ28 DBQ28 DQ29 DBQ29 DQ30 DBQ30
+.subckt ldo_blk VIN VOUT VSS
+XQ1_0 VSS VSS bg_a sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ1_1 VSS VSS bg_a sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_0 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_1 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_2 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_3 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_4 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_5 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_6 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_7 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_8 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_9 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_10 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_11 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_12 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_13 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_14 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ2_15 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ3_0 VSS VSS bg_q3e sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XQ3_1 VSS VSS bg_q3e sky130_fd_pr__pnp_05v5_W3p40L3p40 m=1
+XR10 bg_b bg_bq VSS sky130_fd_pr__res_xhigh_po_1p41 L=8 mult=1 m=1
+XR20 ldo_vref bg_r2m VSS sky130_fd_pr__res_xhigh_po_1p41 L=39 mult=1 m=1
+XR21 bg_r2m bg_q3e VSS sky130_fd_pr__res_xhigh_po_1p41 L=39 mult=1 m=1
+XMA bg_a ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XMB bg_b ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XMO ldo_vref ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XMTB bg_tl ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XM6 ldo_pb ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XM1 bg_oa bg_a bg_tl VIN sky130_fd_pr__pfet_g5v0d10v5 W=8 L=16 nf=1 m=1
+XM2 bg_ob bg_b bg_tl VIN sky130_fd_pr__pfet_g5v0d10v5 W=8 L=16 nf=1 m=1
+XMS1 bg_st VSS VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=0.42 L=50 nf=1 m=1
+XM3 bg_oa bg_oa VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XM4 bg_ob bg_oa VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XM5 ldo_pb bg_ob VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32 nf=1 m=1
+XMS3 bg_st ldo_vref VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=4 L=0.5 nf=1 m=1
+XMS2 ldo_pb bg_st VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=0.5 L=4 nf=1 m=1
+XCCB ldo_pb bg_ob sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1
+XMTP ldo_tb ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=4 L=8 nf=1 m=1
+XMC ldo_a ldo_a VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=20 L=2 nf=1 m=1
+XMD ldo_g ldo_a VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=20 L=2 nf=1 m=1
+XMP VOUT ldo_g VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=200 L=0.5 nf=20 m=1
+XMTN ldo_tb ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=4 L=2 nf=1 m=1
+XMT ldo_tail ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=8 L=2 nf=1 m=1
+XMAO ldo_a ldo_fb ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20 L=2 nf=1 m=1
+XMBO ldo_g ldo_vref ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20 L=2 nf=1 m=1
+XCCL ldo_g VOUT sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1
+XRD1 VOUT ldo_fb VSS sky130_fd_pr__res_xhigh_po_1p41 L=34.1 mult=1 m=1
+XRD2 ldo_fb ldo_r2m VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRD3 ldo_r2m VSS VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XCD0 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD1 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD2 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD3 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD4 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD5 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD6 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD7 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD8 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD9 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD10 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD11 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD12 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD13 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+XCD14 VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1
+.ends ldo_blk
+
+.subckt tx_core LO_PAD TXP TXN VIN VSS DI0 DBI0 DI1 DBI1 DI2 DBI2 DI3 DBI3 DI4 DBI4 DI5 DBI5 DI6 DBI6 DI7 DBI7 DI8 DBI8 DI9 DBI9 DI10 DBI10 DI11 DBI11 DI12 DBI12 DI13 DBI13 DI14 DBI14 DI15 DBI15 DI16 DBI16 DI17 DBI17 DI18 DBI18 DI19 DBI19 DI20 DBI20 DI21 DBI21 DI22 DBI22 DI23 DBI23 DI24 DBI24 DI25 DBI25 DI26 DBI26 DI27 DBI27 DI28 DBI28 DI29 DBI29 DI30 DBI30 DQ0 DBQ0 DQ1 DBQ1 DQ2 DBQ2 DQ3 DBQ3 DQ4 DBQ4 DQ5 DBQ5 DQ6 DBQ6 DQ7 DBQ7 DQ8 DBQ8 DQ9 DBQ9 DQ10 DBQ10 DQ11 DBQ11 DQ12 DBQ12 DQ13 DBQ13 DQ14 DBQ14 DQ15 DBQ15 DQ16 DBQ16 DQ17 DBQ17 DQ18 DBQ18 DQ19 DBQ19 DQ20 DBQ20 DQ21 DBQ21 DQ22 DBQ22 DQ23 DBQ23 DQ24 DBQ24 DQ25 DBQ25 DQ26 DBQ26 DQ27 DBQ27 DQ28 DBQ28 DQ29 DBQ29 DQ30 DBQ30
+XLDO VIN VDD VSS ldo_blk
 XI DI0 DBI0 DI1 DBI1 DI2 DBI2 DI3 DBI3 DI4 DBI4 DI5 DBI5 DI6 DBI6 DI7 DBI7 DI8 DBI8 DI9 DBI9 DI10 DBI10 DI11 DBI11 DI12 DBI12 DI13 DBI13 DI14 DBI14 DI15 DBI15 DI16 DBI16 DI17 DBI17 DI18 DBI18 DI19 DBI19 DI20 DBI20 DI21 DBI21 DI22 DBI22 DI23 DBI23 DI24 DBI24 DI25 DBI25 DI26 DBI26 DI27 DBI27 DI28 DBI28 DI29 DBI29 DI30 DBI30 OUTP OUTN LO_I LOB_I IREF_I VSS dac_mixer
 XQ DQ0 DBQ0 DQ1 DBQ1 DQ2 DBQ2 DQ3 DBQ3 DQ4 DBQ4 DQ5 DBQ5 DQ6 DBQ6 DQ7 DBQ7 DQ8 DBQ8 DQ9 DBQ9 DQ10 DBQ10 DQ11 DBQ11 DQ12 DBQ12 DQ13 DBQ13 DQ14 DBQ14 DQ15 DBQ15 DQ16 DBQ16 DQ17 DBQ17 DQ18 DBQ18 DQ19 DBQ19 DQ20 DBQ20 DQ21 DBQ21 DQ22 DBQ22 DQ23 DBQ23 DQ24 DBQ24 DQ25 DBQ25 DQ26 DBQ26 DQ27 DBQ27 DQ28 DBQ28 DQ29 DBQ29 DQ30 DBQ30 OUTP OUTN LO_Q LOB_Q IREF_Q VSS dac_mixer
 XLO IN LO_I LOB_I LO_Q LOB_Q VDD VSS lo_path

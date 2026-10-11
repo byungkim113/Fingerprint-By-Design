@@ -6,7 +6,7 @@ Signal path (all SKY130 devices except the stimulus and the ideal bias current):
   -> the DAC's two output currents are the tails of a Gilbert switching quad
   driven by LO_I (or LO_Q) -> both quads share one differential load
   (I and Q sum at RF) -> differential-pair PA driver -> RF out.
-LO path: external LO (sine) -> RC-CR (res_high_po_0p35 + cap_mim, as in lo.py)
+LO path: external LO (sine) -> RC-CR (res_high_po_1p41 + cap_mim, v2 as laid out)
   -> AC-coupled self-biased inverter limiter + inverter chain -> LO and LOb.
 
 Timing: LO 200 MHz, DAC update 25 MS/s (8 LO cycles per DAC sample).
@@ -22,15 +22,29 @@ from spice import PDK_LIB, mc_control, run_netlist
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "analysis"))
 
+import os
+
 N_UNITS = 31
-W_U, L_U = 0.5, 1.0              # DAC current source (design D1)
+# design variants (step 2d, PLAN.md): "base" = the laid-out core; "palin" = source-degenerated
+# PA (split tail, R_DEG between the sources, loads x2); "bigdac" = DAC units 4x area, same W/L
+VARIANT = os.environ.get("TX_VARIANT", "base")
+N_DEG = int(os.environ.get("TX_NDEG", "2"))       # palin: degeneration = N_DEG x 311-ohm segments
+W_U, L_U = (1.0, 2.0) if VARIANT == "bigdac" else (0.5, 1.0)   # DAC current source (design D1)
 IREF = 10e-6
 W_SW, L_SW = 1.0, 0.15           # DAC data switches
 W_MX, L_MX = 4.0, 0.15           # mixer switching quad
 R_LOAD, C_LOAD = 1500.0, 0.25e-12
 W_PA, L_PA, I_PA, R_PA = 10.0, 0.15, 1e-3, 300.0
 FLO, FS = 200e6, 25e6
-VDD = 1.8
+# supply-drift runs: TX_VARIANT=vdd162 / vdd198 = the base circuit at 1.62 / 1.98 V (data-bit drive
+# levels follow the supply); "more_a"/"more_b" = the base circuit, separate run directories
+VDD = float(VARIANT[3] + "." + VARIANT[4:]) if VARIANT.startswith("vdd") else 1.8   # vdd1764 -> 1.764 V
+# LDO variants (item 2c, full version): ldo330 / ldo297 ... = the core supplied by the on-chip LDO
+# (sim/ldo.py, bandgap reference) from an external VIN of 3.30 / 2.97 ... V; data bits stay at 1.8 V
+LDO = VARIANT.startswith("ldo")
+VIN_EXT = float(VARIANT[3] + "." + VARIANT[4:]) if LDO else None
+# mismatch sensitivity: scales every MOSFET mismatch term (SKY130 MC_MM_SWITCH multiplies them)
+MM_SCALE = float(os.environ.get("TX_MMSCALE", "1"))
 T_RISE = 0.2e-9
 NF, PF = "sky130_fd_pr__nfet_01v8", "sky130_fd_pr__pfet_01v8"
 
@@ -103,7 +117,7 @@ def dac_and_quad(ch, codes, lo, lob):
     """one channel: DAC cells feeding a switching quad onto outp/outn. With REAL the
     reference current comes from the on-chip bias reference (bias_ref.py), otherwise
     from an ideal source."""
-    lines = ([] if REAL else [f"Iref_{ch} vdd g{ch} {IREF}"]) + [f"XR{ch} g{ch} g{ch} 0 0 {NF} W={W_U} L={L_U}"]
+    lines = ([] if REAL else [f"Iref_{ch} vdd g{ch} {IREF}"]) + [f"XREF{ch} g{ch} g{ch} 0 0 {NF} W={W_U} L={L_U}"]
     bits = thermometer(codes)
     for k in range(N_UNITS):
         lines += [f"XU{ch}{k} n{ch}{k} g{ch} 0 0 {NF} W={W_U} L={L_U}",
@@ -133,8 +147,17 @@ def passives_real():
             RES("Rbp", "pg", "vb", "20k"), RES("Rbn", "ng", "vb", "20k"),
             RES("Rv1", "vdd", "vb", "50k"), RES("Rv2", "vb", "0", "50k"),
             *bias_ref.core(outs=(("gi", 1), ("gq", 1), ("pab", 10), ("lob_bias", 10), ("ob_bias", 10))),
-            f"XPAB pab pab 0 0 {NF} W=1 L=0.5", f"XPAT ptail pab 0 0 {NF} W=10 L=0.5",
-            RES("RPAp", "vdd", "pdp", "pa"), RES("RPAn", "vdd", "pdn", "pa")]
+            f"XPAB pab pab 0 0 {NF} W=1 L=0.5", *pa_tail_and_loads()]
+
+
+def pa_tail_and_loads():
+    if VARIANT != "palin":
+        return [f"XPAT ptail pab 0 0 {NF} W=10 L=0.5", RES("RPAp", "vdd", "pdp", "pa"), RES("RPAn", "vdd", "pdn", "pa")]
+    deg = [RES(f"RDEG{i}", "ptail" if i == 0 else f"dg{i}", "ptail2" if i == N_DEG - 1 else f"dg{i + 1}", "pa")
+           for i in range(N_DEG)]
+    return [f"XPAT1 ptail pab 0 0 {NF} W=5 L=0.5", f"XPAT2 ptail2 pab 0 0 {NF} W=5 L=0.5", *deg,
+            RES("RPAp1", "vdd", "pl_p", "pa"), RES("RPAp2", "pl_p", "pdp", "pa"),
+            RES("RPAn1", "vdd", "pl_n", "pa"), RES("RPAn2", "pl_n", "pdn", "pa")]
 
 
 def lo_input_buffer():
@@ -158,26 +181,49 @@ def output_buffer():
             "Cxp sfp rfp 10p", "Rxp rfp 0 50", "Cxn sfn rfn 10p", "Rxn rfn 0 50"]   # off chip
 
 
+# RC-CR v2 (2026-10-03, as laid out): wide 1p41 resistors (the 0p35 ones failed rpm.1), Cq top
+# plate on vq; RCCR_LQ may be trimmed vs RCCR_LI to cancel the layout's quadrature error
+RCCR_LI = float(os.environ.get("RCCR_LI", "25.6"))
+RCCR_LQ = float(os.environ.get("RCCR_LQ", "20.3"))   # trimmed: post-layout quad error -27.7 -> -2.0 deg
+
+
+def rccr_lines():
+    return [f"XRi in vi 0 sky130_fd_pr__res_high_po_1p41 L={RCCR_LI} mult=1 m=1",
+            f"XCi vi 0 sky130_fd_pr__cap_mim_m3_1 W={lo.C_W} L={lo.C_L} MF=1 m=1",
+            f"XCq vq in sky130_fd_pr__cap_mim_m3_1 W={lo.C_W} L={lo.C_L} MF=1 m=1",
+            f"XRq vq 0 0 sky130_fd_pr__res_high_po_1p41 L={RCCR_LQ} mult=1 m=1"]
+
+
+def ldo_supply():
+    """external VIN -> on-chip LDO -> core vdd; Vdd (0 V ammeter) keeps i(Vdd) = core current."""
+    import ldo
+    # nodeset: without it the operating-point search occasionally lands on a non-physical solution
+    # (VOUT ~ -16 V) for some Monte Carlo chips; rshunt is a negligible 1e12-ohm convergence aid
+    return [ldo.subckt(), f"Vin vin_ext 0 {VIN_EXT}", "XLDO vin_ext vdd_ldo 0 ldo", "Vdd vdd_ldo vdd 0",
+            ".nodeset v(vdd)=1.8 v(xldo.ldo_vref)=1.2", ".option rshunt=1e12"]
+
+
 def netlist(codes_i, codes_q, temp=27, corner="tt", n_chips=0, lo_amp=0.5, extra_save=""):
     n = len(codes_i)
     tstop = n / FS
-    lines = [f"* transmitter core T={temp}", f'.lib "{PDK_LIB}" {corner}', f".temp {temp}",
+    lines = [f"* transmitter core T={temp}", f'.lib "{PDK_LIB}" {corner}',
+             *([f".param mc_mm_switch={MM_SCALE}"] if MM_SCALE != 1.0 and corner.endswith("_mm") else []),
+             f".temp {temp}",
              *([f'.include "{STDCELLS}"'] if REAL else []),
-             f"Vdd vdd 0 {VDD}",
+             *([] if LDO else [f"Vdd vdd 0 {VDD}"]),
              # LO path: RC-CR exactly as in lo.py, then limiters
              f"Vlo s 0 dc 0 ac {lo_amp} sin(0 {lo_amp} {FLO})",
              *(lo_input_buffer() if REAL else ["Rs s in 50"]),
-             f"XRi in vi 0 sky130_fd_pr__res_high_po_0p35 L={lo.R_L} mult=1 m=1",
-             f"XCi vi 0 sky130_fd_pr__cap_mim_m3_1 W={lo.C_W} L={lo.C_L} MF=1 m=1",
-             f"XCq in vq sky130_fd_pr__cap_mim_m3_1 W={lo.C_W} L={lo.C_L} MF=1 m=1",
-             f"XRq vq 0 0 sky130_fd_pr__res_high_po_0p35 L={lo.R_L} mult=1 m=1",
+             *rccr_lines(),
              *lo_limiter("i", "vi"), *lo_limiter("q", "vq"),
              *dac_and_quad("i", codes_i, "lo_i", "lob_i"),
              *dac_and_quad("q", codes_q, "lo_q", "lob_q"),
              *(passives_real() if REAL else passives_ideal()),
              f"XPA1 {'pdn' if REAL else 'rfn'} pg ptail 0 {NF} W={W_PA} L={L_PA}",
-             f"XPA2 {'pdp' if REAL else 'rfp'} ng ptail 0 {NF} W={W_PA} L={L_PA}",
-             *(output_buffer() if REAL else [])]
+             f"XPA2 {'pdp' if REAL else 'rfp'} ng {'ptail2' if REAL and VARIANT == 'palin' else 'ptail'} 0 {NF} W={W_PA} L={L_PA}",
+             *(output_buffer() if REAL else []),
+             # the LDO goes last so the core devices keep their Monte Carlo draws (same chips as before)
+             *(ldo_supply() if LDO else [])]
     save = "  save v(rfp) v(rfn) v(outp) v(outn) v(lo_i) v(lo_q) v(vi) v(vq)" + extra_save + "\n"
     tran = f"  tran 20p {tstop:.4e} 0 20p\n  wrdata tx_out.txt v(rfp) v(rfn) v(outp) v(outn) v(lo_i) v(lo_q)\n"
     if n_chips:

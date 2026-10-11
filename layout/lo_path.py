@@ -21,19 +21,26 @@ LO_P, LOB_P = (12.17, 1.2), (8.54, 1.2)
 PINS = ["IN", "LO_I", "LOB_I", "LO_Q", "LOB_Q", "VDD", "VSS"]
 
 
+def rccr_pins():
+    """pin label positions of rccr.gds (IN, VI, VQ, VSS)."""
+    import gdstk
+    return {t.text: tuple(t.origin) for t in gdstk.read_gds(str(HERE / "rccr.gds")).top_level()[0].labels}
+
+
 def build(name="lo_path"):
     pdk.activate()
     top = Component(f"{name}_hier")
     R.place(top, HERE / "rccr.gds", 0, 0)
+    rp = rccr_pins()
     for o in (LIM_I, LIM_Q):
         R.place(top, HERE / "lo_limiter.gds", *o)
 
     # VI (rccr bottom-left, met4) down and right into limiter I's cap top plate
     vin_i = (LIM_I[0] + VIN[0], LIM_I[1] + VIN[1])
-    R.wire(top, "m4", [(0.74, -13.0), (0.74, vin_i[1]), vin_i])
+    R.wire(top, "m4", [rp["VI"], (rp["VI"][0], vin_i[1]), vin_i])
     # VQ (rccr right, met4) straight across into limiter Q's cap top plate
     vin_q = (LIM_Q[0] + VIN[0], LIM_Q[1] + VIN[1])
-    R.wire(top, "m4", [(22.74, 17.1), vin_q])
+    R.wire(top, "m4", [rp["VQ"], vin_q])
 
     # VDD: limiter VPWR rails (met1, y = origin + 2.72) tied on met3 east of everything
     x_e = 54.0
@@ -57,7 +64,7 @@ def build(name="lo_path"):
     # vertical on met4: on met3 it would cross the VDD route (met3) and short them
     R.wire(top, "m4", [(x_s, gnds[0][1]), (x_s, gnds[1][1])])
 
-    R.pin(top, "m4", 0.74, 23.2, "IN")
+    R.pin(top, "m4", *rp["IN"], "IN")
     for tag, o in (("I", LIM_I), ("Q", LIM_Q)):
         R.pin(top, "m2", o[0] + LO_P[0], o[1] + LO_P[1], f"LO_{tag}")
         R.pin(top, "m2", o[0] + LOB_P[0], o[1] + LOB_P[1], f"LOB_{tag}")
@@ -68,15 +75,13 @@ def build(name="lo_path"):
 
 def netlist(name="lo_path"):
     import limiter
+    import rccr
     lim = limiter.netlist().replace(".subckt lo_limiter", ".subckt lo_limiter_sub").replace(
         ".ends lo_limiter", ".ends lo_limiter_sub")
     return "\n".join([
         lim,
         f".subckt {name} IN LO_I LOB_I LO_Q LOB_Q VDD VSS",
-        "XRi IN VI VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1",
-        "XCi VI VSS sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1",
-        "XCq IN VQ sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1",
-        "XRq VQ VSS VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1",
+        *[l for l in rccr.netlist().splitlines() if l.startswith("X")],
         "XLI VI LO_I LOB_I VDD VSS lo_limiter_sub",
         "XLQ VQ LO_Q LOB_Q VDD VSS lo_limiter_sub",
         f".ends {name}", ""])

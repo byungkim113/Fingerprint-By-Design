@@ -12,10 +12,10 @@ XL4 LOB VGND VGND VPWR VPWR LO sky130_fd_sc_hd__inv_8
 .ends lo_limiter_sub
 
 .subckt lo_path IN LO_I LOB_I LO_Q LOB_Q VDD VSS
-XRi IN VI VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1
+XRi IN VI VSS sky130_fd_pr__res_high_po_1p41 L=25.6 mult=1 m=1
 XCi VI VSS sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
-XCq IN VQ sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
-XRq VQ VSS VSS sky130_fd_pr__res_high_po_0p35 L=5 mult=1 m=1
+XCq VQ IN sky130_fd_pr__cap_mim_m3_1 W=7.8 L=7.8 MF=1 m=1
+XRq VQ VSS VSS sky130_fd_pr__res_high_po_1p41 L=20.3 mult=1 m=1
 XLI VI LO_I LOB_I VDD VSS lo_limiter_sub
 XLQ VQ LO_Q LOB_Q VDD VSS lo_limiter_sub
 .ends lo_path

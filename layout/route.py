@@ -9,10 +9,12 @@ from glayout.pdk.sky130_mapped import sky130_mapped_pdk as pdk
 from glayout.primitives.via_gen import via_stack
 
 L = {"li": (67, 20), "mcon": (67, 44), "m1": (68, 20), "via1": (68, 44), "m2": (69, 20),
-     "via2": (69, 44), "m3": (70, 20), "via3": (70, 44), "m4": (71, 20)}
+     "via2": (69, 44), "m3": (70, 20), "via3": (70, 44), "m4": (71, 20),
+     "via4": (71, 44), "m5": (72, 20)}
 PINL = {"li": ((67, 16), (67, 5)), "m1": ((68, 16), (68, 5)), "m2": ((69, 16), (69, 5)),
-        "m3": ((70, 16), (70, 5)), "m4": ((71, 16), (71, 5))}
-WIDTH = {"m1": 0.23, "m2": 0.26, "m3": 0.4, "m4": 0.4}
+        "m3": ((70, 16), (70, 5)), "m4": ((71, 16), (71, 5)),
+        "m5": ((72, 16), (72, 5))}
+WIDTH = {"m1": 0.23, "m2": 0.26, "m3": 0.4, "m4": 0.4, "m5": 1.6}
 GL = {"li": "met1", "m1": "met2", "m2": "met3", "m3": "met4", "m4": "met5"}   # gLayout names
 ORDER = ["li", "m1", "m2", "m3", "m4"]
 
@@ -92,3 +94,10 @@ def via3_min(top, x, y):
     box(top, "via3", x, y, 0.2, 0.2)
     box(top, "m3", x, y, 0.38, 0.32)
     box(top, "m4", x, y, 0.33, 0.33)
+
+
+def via4_min(top, x, y):
+    """0.8 um via4: met4 enclosure 0.19 (1.2 um pad), met5 enclosure 0.31 (1.6 um = met5 min width)."""
+    box(top, "via4", x, y, 0.8, 0.8)
+    box(top, "m4", x, y, 1.2, 1.2)
+    box(top, "m5", x, y, 1.6, 1.6)

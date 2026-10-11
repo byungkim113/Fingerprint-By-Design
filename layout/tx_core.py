@@ -32,8 +32,9 @@ from glayout.pdk.sky130_mapped import sky130_mapped_pdk as pdk
 HERE = Path(__file__).resolve().parent
 LOP, CHI, CHQ, ONT = (0, 0), (55, -75), (82, 14.5), (200, -30)
 BIA, LBF, OBF = (75, -0.3), (-30, 20), (315, 25)
+LDO_O = (-52.6, -270.64)                   # ldo_blk origin: top edge at y = -92, west edge at x = -75
 DATA = [f"D{c}{k}" for c in ("I", "Q") for k in range(31)] + [f"DB{c}{k}" for c in ("I", "Q") for k in range(31)]
-PINS = ["LO_PAD", "TXP", "TXN", "VDD", "VSS"] + DATA
+PINS = ["LO_PAD", "TXP", "TXN", "VIN", "VSS"] + DATA      # VDD is internal: the LDO output
 G_BUS_Y = -1.065                           # DAC gate (reference) bus centre, dac_mixer coords
 
 
@@ -112,9 +113,11 @@ def build(name="tx_core"):
     R.via3_min(top, *vdd_on)
 
     route_new_blocks(top)
+    vss_grid(top)
+    ldo_supply(top)
     for net, layer, xy in (("LO_PAD", "m4", a(LBF, (-29.8, 0.2))), ("TXP", "m3", a(OBF, (6.0, 10.7))),
                            ("TXN", "m3", a(OBF, (10.0, 11.9))),
-                           ("VDD", "m4", (54.0, 45.0)), ("VSS", "m3", a(ONT, (15.5, -6)))):
+                           ("VSS", "m5", (100.0, -86.0))):
         R.pin(top, layer, *xy, net)
     return top
 
@@ -158,9 +161,9 @@ def route_new_blocks(top):
     R.wire(top, "m3", [(blo[0], 40.0), (blo[0], y_lo), (lb[0], y_lo)]); R.via3_min(top, lb[0], y_lo)
     R.wire(top, "m4", [(lb[0], y_lo), lb]); R.via3_min(top, *lb)
     # IN: LO buffer output track (met3, local y 11.9) east, met4 down onto the LO path input strap
+    # (RC-CR v2: the IN route enters the RC-CR from the top, met4 at x 1.27 spanning this y)
     y_in = a(LBF, (0, 11.9))[1]
-    R.wire(top, "m3", [a(LBF, (6.62, 11.9)), (0.74, y_in)]); R.via3_min(top, 0.74, y_in)
-    R.wire(top, "m4", [(0.74, y_in), (0.74, 23.2)])
+    R.wire(top, "m3", [a(LBF, (6.62, 11.9)), (1.27, y_in)]); R.via3_min(top, 1.27, y_in)
     # RFP / RFN (out_net met3 verticals at local x 95.43 / 103.43, bottoms at local y 41.45) -> down,
     # east on met3 below the RFN vertical, met2 up to the follower gate stubs (PDP / PDN)
     for xl, y_run, pd in ((95.43, 8.0, (1.16, -10.5)), (103.43, 9.5, (5.47, -11.5))):
@@ -176,6 +179,46 @@ def route_new_blocks(top):
     R.wire(top, "m4", [(lv[0], 45.0), (ov[0], 45.0)])
 
 
+def vss_grid(top):
+    """metal VSS: until now every block tied its ground only to the substrate taps. A met5
+    spine below the core (met5 is otherwise unused, so it cannot short anything) with
+    met5 drops to one tie point per block, stacked down to that block's VSS metal."""
+    y_spine = -86.0
+    ties = [(a(LBF, (14.0, 10.7)), "m3"),                  # LO buffer VSS track
+            ((22.74, -6.9), "m4"),                         # LO path VSS rail
+            (a(BIA, (10.0, -24.0)), "m3"),                 # bias reference bottom VSS track
+            (a(CHI, (60.0, -2.55)), "m1"),                 # I channel tap ring (bottom bar)
+            (a(CHQ, (53.0, -2.55)), "m1"),                 # Q channel tap ring (bottom bar)
+            (a(ONT, (15.5, -6.0)), "m3"),                  # output network VSS track
+            (a(OBF, (13.0, 13.1)), "m3")]                  # output buffer VSS track
+    for (x, y), layer in ties:
+        if layer == "m1":
+            R.via1_min(top, x, y); R.via2_min(top, x, y)
+            R.box(top, "m3", x, y, 0.5, 0.5)
+        if layer in ("m1", "m3"):
+            R.via3_min(top, x, y)
+        R.via4_min(top, x, y)
+        R.wire(top, "m5", [(x, y), (x, y_spine)])
+    xs = [x for (x, _), _ in ties]
+    R.wire(top, "m5", [(min(xs), y_spine), (max(xs), y_spine)])
+
+
+def ldo_supply(top):
+    """on-chip LDO (ldo_blk) below the core: VOUT -> core VDD (met4 up the east side to the VDD run at
+    y=45, crossing only met3), VSS -> the met5 spine (extended east), VIN = the chip's supply pin."""
+    import json
+    R.place(top, HERE / "ldo_blk.gds", *LDO_O)
+    trk = {(t["net"], t["ch"]): t for t in json.loads((HERE / "ldo_blk_tracks.json").read_text())}
+    vout = trk[("VOUT", "TOP2")]                         # topmost LDO track, spans to the east end
+    xv, yv = LDO_O[0] + vout["x1"] - 0.9, LDO_O[1] + vout["y"]
+    R.via3_min(top, xv, yv)
+    R.wire(top, "m4", [(xv, yv), (xv, 45.0), (a(OBF, (5.0, 9.5))[0], 45.0)])
+    vss = trk[("VSS", "BOT2")]
+    xs, ys = LDO_O[0] + vss["x1"] - 4.4, LDO_O[1] + vss["y"]
+    R.via3_min(top, xs, ys); R.via4_min(top, xs, ys)
+    R.wire(top, "m5", [(xs, ys), (xs, -86.0), (a(OBF, (13.0, 13.1))[0], -86.0)])
+
+
 def netlist(name="tx_core"):
     import dac_mixer
     import lo_path
@@ -186,7 +229,9 @@ def netlist(name="tx_core"):
     return "\n".join([
         dac_mixer.netlist(), lo_path.netlist(), out_net.netlist(), bias_block.netlist(),
         buffers.lo_netlist(), buffers.out_netlist(),
-        f".subckt {name} LO_PAD TXP TXN VDD VSS {dport('I')} {dport('Q')}",
+        __import__("ldo_block").netlist(),
+        f".subckt {name} LO_PAD TXP TXN VIN VSS {dport('I')} {dport('Q')}",
+        "XLDO VIN VDD VSS ldo_blk",
         f"XI {dport('I')} OUTP OUTN LO_I LOB_I IREF_I VSS dac_mixer",
         f"XQ {dport('Q')} OUTP OUTN LO_Q LOB_Q IREF_Q VSS dac_mixer",
         "XLO IN LO_I LOB_I LO_Q LOB_Q VDD VSS lo_path",

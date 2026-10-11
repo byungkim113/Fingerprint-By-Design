@@ -11,6 +11,7 @@ analysis : bursts of 18 noisy frames -> level-ladder residual features -> BASE
 usage: python tx_ident.py sim [deployed|design]     python tx_ident.py analyze [--snr 30]
 """
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -33,7 +34,18 @@ RESULTS = Path(__file__).resolve().parents[1] / "results"
 
 
 def frame():
-    ci, cq, _ = tx.qpsk_codes(N_SAMPLES, seed=1)
+    f = os.environ.get("TX_FRAME", "1")
+    if f == "cov":
+        return coverage_codes()
+    ci, cq, _ = tx.qpsk_codes(N_SAMPLES, seed=int(f))   # data frame (round 3)
+    return ci, cq
+
+
+def coverage_codes(seed=2026):
+    """code-coverage enrollment sequence: every I and Q code 4 times, with varied partner codes."""
+    rng = np.random.default_rng(seed)
+    ci = np.concatenate([rng.permutation(32) for _ in range(N_SAMPLES // 32)])
+    cq = np.concatenate([rng.permutation(32) for _ in range(N_SAMPLES // 32)])
     return ci, cq
 
 
@@ -54,7 +66,9 @@ def netlist(corner, seed0, n_chips, temp):
 
 
 def run_dir(corner, temp):
-    return tx.WORK / f"ident_{corner}_T{temp:g}"
+    v = "" if tx.VARIANT == "base" else f"{tx.VARIANT}_"
+    tag = os.environ.get("TX_TAG", "")                 # separate directories (fresh chips, scaled mismatch)
+    return tx.WORK / f"ident_{tag}{v}{corner}_T{temp:g}"
 
 
 def run_one(job):
@@ -106,11 +120,17 @@ def frames(corner, seeds):
     return np.array(Y), ops
 
 
+MASKED = "--masked" in sys.argv     # sensitivity rerun: drop levels of codes the frame never uses
+
+
 def features(z, ci, cq):
-    li, lq, _, _ = level_fit(z, ci, cq)
-    k = np.arange(len(li))
+    li, lq, si, sq = level_fit(z, ci, cq)
     out = []
-    for lev in (li, lq):
+    for lev, seen in ((li, si), (lq, sq)):
+        if not MASKED:
+            seen = np.ones(len(lev), bool)
+        k = np.arange(len(lev))[seen]
+        lev = lev[seen]
         for part in (lev.real, lev.imag):
             out.append(part - np.polyval(np.polyfit(k, part, 1), k))
     return np.concatenate(out)
@@ -161,7 +181,7 @@ def analyze(snr):
         res.append({"seed": seed, "BASE": {f"{TEMPS[ti]:g}": v for ti, v in base.items()}, "B": b})
     m = lambda k, t: float(np.mean([r[k][t] for r in res]))
     ts = [f"{t:g}" for t in TEMPS]
-    print(f"transistor-level identification, 16 chips, SNR {snr:g} dB")
+    print(f"transistor-level identification, 16 chips, SNR {snr:g} dB{' (masked features)' if MASKED else ''}")
     for k in ("BASE", "B"):
         print(f"  {k:<5}" + "  ".join(f"{t:>4}:{m(k, t):.3f}" for t in ts))
     verdict = {"identifiable": m("BASE", "27") >= 0.90}
@@ -174,7 +194,7 @@ def analyze(snr):
                     "PASS" if min(rec.values()) >= 0.5 and cost <= 0.02 and harm else "FAIL")
     print(f"  gaps {gap}  recovery {rec}  27C cost {100 * cost:+.1f} pts  no-harm {harm}")
     print(f"  pre-registered: identifiable {'PASS' if verdict['identifiable'] else 'FAIL'} | B {verdict['B']}")
-    (RESULTS / f"tx_ident_snr{snr:g}.json").write_text(json.dumps(
+    (RESULTS / f"tx_ident_snr{snr:g}{'_masked' if MASKED else ''}.json").write_text(json.dumps(
         dict(snr=snr, runs=res, gap=gap, recovery=rec, cost_27=cost, no_harm=harm, verdict=verdict), indent=1))
 
 

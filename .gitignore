@@ -6,3 +6,5 @@ sim/test/
 *.log
 .DS_Store
 sim/work/
+sim/work
+sim/work_icloud_leftover/
