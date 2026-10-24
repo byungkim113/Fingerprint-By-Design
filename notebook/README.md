@@ -4,7 +4,7 @@
 
 Submission to the IEEE SSCS "Code-a-Chip" Travel Grant Awards at ISSCC 2027 · License: Apache-2.0
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/Code-A-Chip/blob/main/notebook/fingerprint_by_design.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/sscs-ose-code-a-chip.github.io/blob/isscc27-fingerprint-by-design/ISSCC27/submitted_notebooks/fingerprint_by_design/fingerprint_by_design.ipynb)
 
 ## Summary
 
@@ -40,6 +40,7 @@ All tests were pre-registered; failures are reported.
 | `gds/` | Layout files (gzipped GDS) of the analog core with LDO, and of the digital front end |
 | `images/` | Layout renders and explanatory diagrams |
 | `setup_tools.sh` | Installs the pinned SKY130 PDK and builds ngspice 47 for the live demo (Linux / Colab) |
+| `sim/` | The six project scripts the live demo needs (netlist generator and helpers), copied unchanged |
 | `LICENSE` | Apache License 2.0 |
 
 ## Running

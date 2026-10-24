@@ -14,7 +14,7 @@ md(r"""
 
 Submission to the IEEE SSCS Open-Source Ecosystem "Code-a-Chip" Travel Grant Awards at ISSCC 2027
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/Code-A-Chip/blob/main/notebook/fingerprint_by_design.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/sscs-ose-code-a-chip.github.io/blob/isscc27-fingerprint-by-design/ISSCC27/submitted_notebooks/fingerprint_by_design/fingerprint_by_design.ipynb)
 
 SPDX-License-Identifier: Apache-2.0
 
@@ -112,11 +112,24 @@ except ImportError:
         gdstk = None
         print("gdstk is not available here: the two layout cells will show saved pictures instead")
 
+# Where a bare runtime (e.g. Colab opened from GitHub) fetches this folder from, tried in order
+SUB = "ISSCC27/submitted_notebooks/fingerprint_by_design"
+SOURCES = [("https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io.git", "main", SUB),
+           ("https://github.com/byungkim113/sscs-ose-code-a-chip.github.io.git", "isscc27-fingerprint-by-design", SUB),
+           ("https://github.com/byungkim113/Code-A-Chip.git", "main", "notebook")]
 HERE = os.path.abspath(".")
-if not os.path.isdir(os.path.join(HERE, "data")):          # e.g. a bare Colab runtime: fetch the folder
-    if not os.path.isdir("Code-A-Chip"):
-        subprocess.run(["git", "clone", "-q", "--depth", "1", "https://github.com/byungkim113/Code-A-Chip.git"], check=True)
-    HERE = os.path.abspath("Code-A-Chip/notebook")
+if not os.path.isdir(os.path.join(HERE, "data")):
+    for i, (url, branch, sub) in enumerate(SOURCES):
+        dest = os.path.abspath(f"fbd_src{i}")
+        if not os.path.isdir(dest):
+            ok = subprocess.run(["git", "clone", "-q", "--depth", "1", "--filter=blob:none", "--sparse", "-b", branch,
+                                 url, dest], capture_output=True).returncode == 0
+            ok = ok and subprocess.run(["git", "-C", dest, "sparse-checkout", "set", sub], capture_output=True).returncode == 0
+        if os.path.isdir(os.path.join(dest, sub, "data")):
+            HERE = os.path.join(dest, sub)
+            break
+    else:
+        raise RuntimeError("could not fetch the notebook's data folder; open the notebook from its folder instead")
 os.chdir(HERE)
 
 def load(name):
@@ -282,7 +295,8 @@ far each code's output level sits from a straight line, for I and Q, real and im
 By default (`RUN_LIVE = False`) the cell loads our own run of exactly this demo from `data/live_reference.json`. With
 `RUN_LIVE = True` on Colab or any Linux machine it installs the pinned PDK and builds ngspice 47 (`setup_tools.sh`, about
 5 minutes), runs `sim/live_demo.py` (two ngspice processes in parallel: about 5 minutes on a laptop, longer on a free
-Colab runtime) and compares your result with ours.
+Colab runtime) and compares your result with ours. The `sim/` folder next to this notebook holds the six project
+scripts the demo needs (the netlist generator `tx_full.py` and its helpers), copied unchanged from the project.
 
 *One thing we learned while building this cell:* ngspice's random-number generator gives different values for the same
 seed on macOS and on Linux, so "chip 1" on Colab is a different virtual chip from our "chip 1" (our study ran on macOS).
@@ -295,14 +309,9 @@ RUN_LIVE = False                       # True: run the transistor-level simulati
 ref = load("live_reference")
 live = ref
 if RUN_LIVE:
-    repo = os.path.abspath("..")
-    if not os.path.isdir(os.path.join(repo, "sim")):              # e.g. opened from the Code-a-Chip repository
-        repo = os.path.abspath("Code-A-Chip")
-        if not os.path.isdir(repo):
-            subprocess.run(["git", "clone", "-q", "--depth", "1", "https://github.com/byungkim113/Code-A-Chip.git", repo], check=True)
-    subprocess.run(["bash", os.path.join(repo, "notebook", "setup_tools.sh")], check=True)
+    subprocess.run(["bash", "setup_tools.sh"], check=True)                    # PDK + ngspice 47 (Linux)
     os.environ["PATH"] = os.path.expanduser("~/rffp-tools/ngspice/bin") + os.pathsep + os.environ["PATH"]
-    subprocess.run([sys.executable, "live_demo.py", "2", "--out", HERE], cwd=os.path.join(repo, "sim"), check=True)
+    subprocess.run([sys.executable, "live_demo.py", "2", "--out", HERE], cwd="sim", check=True)   # bundled scripts
     with open("live_fingerprints.json") as f:
         live = json.load(f)
 print(f"ngspice time: {live['ngspice_seconds'] / 60:.1f} min;  EVM: " +
