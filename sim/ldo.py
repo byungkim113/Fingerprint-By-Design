@@ -79,11 +79,27 @@ def subckt():
         __import__("bandgap").subckt(), ".subckt ldo VIN VOUT VSS", *bg_ref(p),
         f"XMT {tail} {p}tb VSS VSS {NH} W=8 L=2",
     ])) + "\n" + "\n".join([
-        f"XMA {a} {fb} {tail} VSS {NH} W={10 * OTA_L} L={OTA_L}", f"XMB {g} {vref} {tail} VSS {NH} W={10 * OTA_L} L={OTA_L}",
+        f"XMA {a} {fb} {tail} VSS {NH} W={10 * OTA_L} L={OTA_L}", f"XMB {g} {p}vss_ref {tail} VSS {NH} W={10 * OTA_L} L={OTA_L}",
         f"XMC {a} {a} VIN VIN {PH} W={10 * OTA_L} L={OTA_L}", f"XMD {g} {a} VIN VIN {PH} W={10 * OTA_L} L={OTA_L}",
         # pass device, Miller compensation, divider (VOUT = VREF * 1.5), decoupling
         f"XMP VOUT {g} VIN VIN {PH} W={W_PASS} L=0.5 nf={NF_PASS}",
-        f"Cc {g} VOUT {C_MILLER}",
+        # soft-start: the OTA sees VREF through a 500k x ~10 pF RC (tau ~5 us), so VOUT ramps up under regulation
+        # instead of rushing past 1.8 V while the OTA is railed (start-up overshoot 2.0-2.8 V without it)
+        *([f"Rss_short {vref} {p}vss_ref 1"] if os.environ.get("LDO_NO_SS") else
+          res("Rss", vref, p + "vss_ref", 10) + [f"XCss {p}vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70 MF=1 m=1"]),
+        # start-up guard: until VREF is up, hold the pass gate at VIN (pass device off) - without it VOUT followed
+        # VIN to ~3.0 V during power-up (found 2026-10-11). x: weak pull-up, pulled low by VREF; y = NOT x; MSW on while y low
+        *([] if os.environ.get("LDO_NO_GUARD") else [
+            f"XRDP {p}x VSS VIN VIN {PH} W=0.42 L=20", f"XRDN {p}x {vref} VSS VSS {NH} W=2 L=1",
+            f"XIP {p}y {p}x VIN VIN {PH} W=2 L=0.5", f"XIN {p}y {p}x VSS VSS {NH} W=1 L=0.5",
+            f"XMSW {g} {p}y VIN VIN {PH} W=40 L=0.5 nf=4",
+            # power-up default: x rides up with VIN through a small MIM cap and y is held low, so the guard is ON
+            # during fast ramps (without them a 1 us ramp still overshot to ~3.5 V: x started at 0 = 'ready')
+            f"XCX {p}x VIN sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1",
+            f"XCY {p}y VSS sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1"]),
+        # Miller compensation: the laid-out 22x22 um MIM cap; LDO_IDEAL_CC=1 -> the ideal C_MILLER of the L1-L3 runs
+        (f"Cc {g} VOUT {C_MILLER}" if os.environ.get("LDO_IDEAL_CC") else
+         f"XCc {g} VOUT sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1"),
         *res("R1", "VOUT", fb, 1, DIV_R1_L), *res("R2", fb, "VSS", 2),
         f"XCdec VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 m={C_DEC_M}",
         ".ends ldo", ""])

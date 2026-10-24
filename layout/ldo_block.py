@@ -52,8 +52,19 @@ DEVICES = (
        ("MTN", "n5_4_2", {"D": "ldo_tb", "G": "ldo_tb", "S": "VSS"}),
        ("MT", "n5_8_2", {"D": "ldo_tail", "G": "ldo_tb", "S": "VSS"}),
        ("MAO", "n5_20_2", {"D": "ldo_a", "G": "ldo_fb", "S": "ldo_tail"}),
-       ("MBO", "n5_20_2", {"D": "ldo_g", "G": "ldo_vref", "S": "ldo_tail"}),
+       ("MBO", "n5_20_2", {"D": "ldo_g", "G": "ldo_vss_ref", "S": "ldo_tail"}),   # OTA sees the soft-started ref
        ("CCL", "mim22", {"C1": "ldo_g", "C2": "VOUT"}),
+       # start-up guard (2026-10-12): holds the pass gate at VIN until VREF is up
+       ("GRP", "p5_g_042_20", {"D": "ldo_x", "G": "VSS", "S": "VIN", "B": "VIN"}),
+       ("GRN", "n5_g_2_1", {"D": "ldo_x", "G": "ldo_vref", "S": "VSS"}),
+       ("GIP", "p5_g_2_05", {"D": "ldo_y", "G": "ldo_x", "S": "VIN", "B": "VIN"}),
+       ("GIN", "n5_g_1_05", {"D": "ldo_y", "G": "ldo_x", "S": "VSS"}),
+       ("GSW", "p5_g_sw", {"D": "ldo_g", "G": "ldo_y", "S": "VIN", "B": "VIN"}),
+       ("GCX", "mim10", {"C1": "ldo_x", "C2": "VIN"}), ("GCY", "mim10", {"C1": "ldo_y", "C2": "VSS"}),
+       # soft-start: 10 x 50k between VREF and the OTA input, 70x70 um MIM to VSS
+       *[(f"RSS{i}", "xh_3525", {"R1": "ldo_vref" if i == 0 else f"ldo_ss{i}", "R2": "ldo_vss_ref" if i == 9 else f"ldo_ss{i + 1}"})
+         for i in range(10)],
+       ("CSS", "mim70", {"C1": "ldo_vss_ref", "C2": "VSS"}),
        ("RD1", "xh_341", {"R1": "VOUT", "R2": "ldo_fb"}),
        ("RD2", "xh_3525", {"R1": "ldo_fb", "R2": "ldo_r2m"}), ("RD3", "xh_3525", {"R1": "ldo_r2m", "R2": "VSS"})]
     + [(f"CD{i}", "n18_dec", {"G": "VOUT", "S": "VSS", "D": "VSS", **({"B": "VSS"} if i == 0 else {})})
@@ -186,6 +197,8 @@ def netlist(name="ldo_blk"):
     xh = "sky130_fd_pr__res_xhigh_po_1p41"
     size = {"p5_16_32": (16, 32, 1), "p5_8_16": (8, 16, 1), "p5_ms1": (0.42, 50, 1), "p5_4_8": (4, 8, 1),
             "p5_20_2": (20, 2, 1), "p5_pass": (200, 0.5, 20), "n5_16_32": (16, 32, 1), "n5_4_05": (4, 0.5, 1),
+            "p5_g_042_20": (0.42, 20, 1), "n5_g_2_1": (2, 1, 1), "p5_g_2_05": (2, 0.5, 1), "n5_g_1_05": (1, 0.5, 1),
+            "p5_g_sw": (40, 0.5, 4),
             "n5_05_4": (0.5, 4, 1), "n5_4_2": (4, 2, 1), "n5_8_2": (8, 2, 1), "n5_20_2": (20, 2, 1)}
     rl = {"xh_8": 8, "xh_39": 39, "xh_341": 34.1, "xh_3525": 35.25}
     lines = [f".subckt {name} VIN VOUT VSS"]
@@ -199,8 +212,9 @@ def netlist(name="ldo_blk"):
             lines.append(f"X{inst} VSS VSS {nets['Emitter']} {pnp} m=1")
         elif cell in rl:
             lines.append(f"X{inst} {nets['R1']} {nets['R2']} VSS {xh} L={rl[cell]} mult=1 m=1")
-        elif cell == "mim22":
-            lines.append(f"X{inst} {nets['C1']} {nets['C2']} sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1")
+        elif cell.startswith("mim"):
+            sz = int(cell[3:])
+            lines.append(f"X{inst} {nets['C1']} {nets['C2']} sky130_fd_pr__cap_mim_m3_1 W={sz} L={sz} MF=1 m=1")
         elif cell == "n18_dec":
             lines.append(f"X{inst} VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1")
     return "\n".join(lines + [f".ends {name}", ""])

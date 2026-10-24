@@ -32,7 +32,13 @@ from glayout.pdk.sky130_mapped import sky130_mapped_pdk as pdk
 HERE = Path(__file__).resolve().parent
 LOP, CHI, CHQ, ONT = (0, 0), (55, -75), (82, 14.5), (200, -30)
 BIA, LBF, OBF = (75, -0.3), (-30, 20), (315, 25)
-LDO_O = (-52.6, -270.64)                   # ldo_blk origin: top edge at y = -92, west edge at x = -75
+def _ldo_origin(top_y=-92.0, west_x=-75.0):
+    """ldo_blk origin so that its top edge sits at top_y and its west edge at west_x (from its GDS bbox)."""
+    (x0, _), (_, y1) = gdstk.read_gds(str(HERE / "ldo_blk.gds")).top_level()[0].bounding_box()
+    return (round(west_x - x0, 2), round(top_y - y1, 2))
+
+
+LDO_O = _ldo_origin()
 DATA = [f"D{c}{k}" for c in ("I", "Q") for k in range(31)] + [f"DB{c}{k}" for c in ("I", "Q") for k in range(31)]
 PINS = ["LO_PAD", "TXP", "TXN", "VIN", "VSS"] + DATA      # VDD is internal: the LDO output
 G_BUS_Y = -1.065                           # DAC gate (reference) bus centre, dac_mixer coords

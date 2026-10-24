@@ -218,8 +218,26 @@ XMP VOUT ldo_g VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=200 L=0.5 nf=20 m=1
 XMTN ldo_tb ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=4 L=2 nf=1 m=1
 XMT ldo_tail ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=8 L=2 nf=1 m=1
 XMAO ldo_a ldo_fb ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20 L=2 nf=1 m=1
-XMBO ldo_g ldo_vref ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20 L=2 nf=1 m=1
+XMBO ldo_g ldo_vss_ref ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20 L=2 nf=1 m=1
 XCCL ldo_g VOUT sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1
+XGRP ldo_x VSS VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=0.42 L=20 nf=1 m=1
+XGRN ldo_x ldo_vref VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=2 L=1 nf=1 m=1
+XGIP ldo_y ldo_x VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=2 L=0.5 nf=1 m=1
+XGIN ldo_y ldo_x VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=1 L=0.5 nf=1 m=1
+XGSW ldo_g ldo_y VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=40 L=0.5 nf=4 m=1
+XGCX ldo_x VIN sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1
+XGCY ldo_y VSS sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1
+XRSS0 ldo_vref ldo_ss1 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS1 ldo_ss1 ldo_ss2 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS2 ldo_ss2 ldo_ss3 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS3 ldo_ss3 ldo_ss4 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS4 ldo_ss4 ldo_ss5 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS5 ldo_ss5 ldo_ss6 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS6 ldo_ss6 ldo_ss7 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS7 ldo_ss7 ldo_ss8 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS8 ldo_ss8 ldo_ss9 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRSS9 ldo_ss9 ldo_vss_ref VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XCSS ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70 MF=1 m=1
 XRD1 VOUT ldo_fb VSS sky130_fd_pr__res_xhigh_po_1p41 L=34.1 mult=1 m=1
 XRD2 ldo_fb ldo_r2m VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRD3 ldo_r2m VSS VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1

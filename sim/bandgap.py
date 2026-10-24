@@ -52,7 +52,10 @@ def subckt(p="bg_"):
         f"XM1 {oa} {A} {tl} VIN {PH} W={2.0*SC:g} L={4.0*SC:g}", f"XM2 {ob} {B} {tl} VIN {PH} W={2.0*SC:g} L={4.0*SC:g}",
         f"XM3 {oa} {oa} VSS VSS {NH} W={4.0*SC:g} L={8.0*SC:g}", f"XM4 {ob} {oa} VSS VSS {NH} W={4.0*SC:g} L={8.0*SC:g}",
         f"XM5 {pb} {ob} VSS VSS {NH} W={4.0*SC:g} L={8.0*SC:g}", f"XM6 {pb} {pb} VIN VIN {PH} W={4.0*SC:g} L={8.0*SC:g}",
-        f"Cc {pb} {ob} 1p",
+        # compensation: the laid-out 22x22 um MIM cap (~1 pF); BG_IDEAL_CC=1 reproduces the ideal 1 pF used in
+        # the L1-L3 runs (2026-10-06)
+        (f"Cc {pb} {ob} {os.environ.get('BG_CC', '1p')}" if os.environ.get("BG_IDEAL_CC") else
+         f"XCc {pb} {ob} sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1"),
         # start-up: st high while VBG is low -> MS2 pulls pb (and the OTA tail) on; once VBG ~1.2 V,
         # MS3 holds st at 0 (detecting on A failed: V(A) ~0.73 V is below the 5 V NMOS threshold)
         f"XMS1 {st} VSS VIN VIN {PH} W=0.42 L=50", f"XMS3 {st} VBG VSS VSS {NH} W=4 L=0.5",

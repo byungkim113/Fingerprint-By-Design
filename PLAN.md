@@ -989,3 +989,69 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   combined temperature x supply identification >= 0.875 at 30 dB (L2; worst unregulated corner was 0.071). For
   arbitrary data it removes most of the supply part (0.59 -> 0.84 at -10%) but temperature remains the limit
   (85C ~0.49 with or without the LDO), and the nominal arbitrary-data accuracy is lower with the LDO (0.93 -> 0.84).
+- 2026-10-11/12: HOUSEKEEPING. Project moved off the iCloud Desktop: fresh clone from GitHub at ~/code-a-chip-rffp
+  (+ gitignored layout/work cells and results/*.log copied; sim/work -> SSD link). Rebuilt chip from the new location:
+  identical (DRC 0 both tools, LVS 291). Old Desktop copy renamed ~/Desktop/code-a-chip-rffp_OLD_icloud (holds the 44
+  iCloud-only leftovers; not deleted). Waveform backup: ~/rffp-backup/sim_work_waveforms.tar.zst (13.6 GB zstd of the
+  ~55 GB SSD waveforms, zstd -t integrity OK) -> two copies (SSD + internal, outside iCloud).
+- 2026-10-11/12: LDO VERIFICATION (item 4):
+  4a MIM vs ideal compensation caps: identical within noise (VOUT 1.7998/1.8017/1.7961 V at -40/27/85C, load reg,
+     settling; MC16 sd 29.5 vs 29.9 mV) -> the ideal caps in L1-L3 did not matter. sim now defaults to the MIM caps
+     (BG_IDEAL_CC / LDO_IDEAL_CC reproduce the L1-L3 netlists).
+  4c START-UP: measuring the true peak (not a 0.5 us window mean) showed VOUT overshooting to ~3.0 V on power-up (pass
+     device on before the bandgap/OTA are alive) - the earlier "1.92 V" was a windowed average (CORRECTION). Fixes in
+     sim/ldo.py: (1) guard that holds the pass gate at VIN until VREF is up (+ power-up-default caps); (2) RC soft-start
+     (500k x ~10 pF MIM, tau ~5 us) between VREF and the OTA. Result: 1-10 us ramps peak <= 1.85 V at -40/27/85C.
+     Remaining: 50 us-1 ms ramps still peak ~1.9-2.0 V, traced to a dynamic overshoot of the bandgap output during the
+     ramp (no static overshoot in DC sweeps; some DC points at 27C, VIN 1.2-1.5 V do not converge). A VIN-threshold
+     condition on the guard was tried and reverted (never released at 2.97 V; non-physical results at -40C).
+     85C transient starts from 0 V stall numerically (timestep collapse at t ~ 5e-14 s); with the ramp starting at
+     0.3 V and in DC sweeps the circuit starts normally.
+     None of this affects L1-L3 (all start from the settled operating point).
+- 2026-10-12: LDO LAYOUT UPDATED for the start-up fixes (guard: 5 MOS + 2 MIM 10x10; soft-start: 10 x 50k + MIM 70x70;
+  OTA input -> soft-started ref): ldo_blk 508.9 x 223.4 um, 82 devices (40 after merging), DRC 0 Magic + KLayout,
+  LVS MATCH. Netgen also matches the SIMULATED LDO netlist (sim/ldo.py) against the layout netlist (40 devices,
+  "Circuits match uniquely") -> layout == simulated circuit. LDO placement in tx_core now computed from the block
+  bbox. Chip 508.9 x 377.6 um, DRC 0 both tools, LVS MATCH (300 = 260 + 40); metal-only probe (layout/probe_nets.py):
+  LDO VSS on the spine, LDO VOUT = core VDD, VIN separate.
+  Steady state after the fixes: VOUT 1.8016 V, 5.75->7 mA -0.6 mV, dip 101 mV, stable; reaches 1.7 V at 18.4 us.
+  Start-up peak (ramp to 3.63 V, -40/27/85C): 1 us 1.839/1.802/1.797; 10 us 1.841/1.802/1.797; 50 us 1.944/1.910/
+  1.936; 200 us 1.919/1.885/1.905 V -> all below the 1.95 V limit (thin margin for 50-200 us ramps; limitation).
+- 2026-10-12: ITEM 4b POST-LAYOUT WITH LDO: full chip extracted (C only): 472 devices, 1930 caps. Nominal, tt 27C,
+  VIN 3.3 V, same frame (sim/pex_nominal_ldo.py): schematic+LDO |gain| 0.0763, EVM 14.23%, Q/I -1.5 deg;
+  post-layout+LDO 0.0748, 13.82%, -2.3 deg -> layout (incl. LDO) preserves performance.
+- 2026-10-12: DIGITAL FRONT END blocked on disk space: 13 GB free; LibreLane needs Colima + a multi-GB Docker image
+  (existing Colima VM 4.2 GB, up to 20 GB). Awaiting the user's choice (free space / VM on SSD / skip).
+- 2026-10-12: Waveform backup moved to /Volumes/PortableSSD/rffp-backup/sim_work_waveforms.tar.zst (user request;
+  size identical, zstd -t OK on the SSD copy before the internal copy was deleted). NOTE: original waveforms and backup
+  are now on the same drive (no protection against SSD failure). Internal disk free: 31 GB.
+- 2026-10-24: NOTEBOOK GAPS 1-5 (user: "run this and then fix the front end"):
+  1 LIVE DEMO: sim/live_demo.py simulates n Monte Carlo chips + the mismatch-free nominal chip (tt, no mm) on a
+    66-sample frame (codes 5..26, 3x each), two ngspice processes in parallel; 2 chips + nominal = 5.1 min on the Mac.
+    notebook/setup_tools.sh installs the pinned PDK (volare, c6d73a35) and builds ngspice 47 from source (2 min on 4
+    cores, Ubuntu 22.04). Reference run saved as notebook/data/live_reference.json; notebook Section 2b.
+    FINDING (portability): ngspice's RNG gives different values for the same seed on macOS vs Linux (agauss/sgauss
+    test: seed 1 -> -0.446 Mac, -1.140 Linux), so "chip k" is platform-specific. Linux ngspice 41 (conda-forge) and
+    47 agree to 7e-5; the nominal chip agrees Mac vs Linux to 2e-9 (EVM 17.19% both). The study's results are
+    unaffected (all runs on one machine); the notebook checks nominal equality + chip-to-chip size instead.
+    (An earlier note in this session blaming ngspice 41 was wrong and was corrected before anything was published.)
+    FINDING (demo): the two chips share most of their offset from the nominal design (corr 0.97; shared 2.5e-2 rms vs
+    nominal curve 4.8e-2); chip 1 vs chip 2 differs by 6.6e-3 rms = 26 noise units at 30 dB, 8 at 20 dB (one
+    18-frame burst). Mismatch shifts the average chip away from the mismatch-free design (tt vs tt_mm differ only in
+    mc_mm_switch). Observed on 3 draws only.
+  2 GDS: notebook/gds/tx_core.gds.gz (1.1 MB) drawn with gdstk in the notebook. 3 tool-version table added.
+  5 Colab badge added; PR description drafted (not opened).
+- 2026-10-24: DIGITAL FRONT END (digital/): SPI (mode 0, 32-bit frames) + 128-word frame memory + thermometer decode,
+  registered true/complement outputs (124 lines). LibreLane 3.0.16 (Docker, PDK 8afc8346), 50 MHz clock target.
+  Iterations: v1 addressed memory -> 413x424 um, setup -1.46 ns, 2020 slew violations (128-way read muxes).
+  v2 ring buffer (rotates per sample; no read mux) -> 342x353, timing met, 138 slew. v3 + ICG clock gate on the ring
+  -> 290x301, power 5.8 -> 1.05 mW. Then repair settings: exclude clkdlybuf4s*/buf_1/clkbuf_1, post-GRT design
+  repair on, slew repair margin 45%, hold margin 0.05 ns, CTS cluster 10 (run7 = final).
+  FINAL (run7): 290.2 x 300.9 um, 4647 cells, 1482 flops (1280 ring), setup WS >= +11.0 ns and hold WS >= +0.057 ns
+  over 9 corners; DRC 0 Magic + KLayout + route, LVS 0, antenna 0; power 1.02 mW (vectorless); IR 0.44 mV.
+  Residual: 12 pin slew flags at ss_100C_1v60 only (4 nets driven by dlygate4sd3_1 hold cells, worst 0.884 ns vs flow
+  target 0.75 ns; lib limit 1.5 ns) + clock-gate root clkbuf_16 fanout 16 vs guideline 10. Excluding dlygate4sd3_1
+  makes hold repair fail (max buffer count) -> accepted and documented.
+  TESTS (digital/tb/run_tests.sh): 947 checks 0 errors at RTL and on the routed gate-level netlist (unit delay;
+  outputs sampled mid-cycle); main frame playback == sim/tx_full.py thermometer; 3 mutants all fail.
+  Not wired to the analog core in one layout; no pads.

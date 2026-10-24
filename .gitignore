@@ -8,3 +8,8 @@ sim/test/
 sim/work/
 sim/work
 sim/work_icloud_leftover/
+digital/runs/
+digital/work/
+digital/tb/*.vvp
+digital/tb/played.txt
+.ipynb_checkpoints/

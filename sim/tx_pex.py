@@ -23,6 +23,7 @@ from spice import PDK_LIB, SPINIT, mc_control
 
 PEX = Path(__file__).resolve().parents[1] / "layout" / "work" / "tx_core" / "pex" / "tx_core_pex_c.spice"
 TEMPS = [-40.0, 27.0, 85.0]
+VIN = 3.3                       # external supply when the extracted chip includes the LDO
 
 
 def ports():
@@ -42,6 +43,8 @@ def netlist(temp, corner, codes_i, codes_q, lo_amp=0.5):
             conn.append({"TXP": "sfp", "TXN": "sfn"}[p])
         elif p == "VDD":
             conn.append("vdd")
+        elif p == "VIN":                                   # chip with on-chip LDO: external 3.3 V supply
+            conn.append("vin_ext")
         elif p == "VSS":
             conn.append("0")
         elif m:
@@ -54,7 +57,8 @@ def netlist(temp, corner, codes_i, codes_q, lo_amp=0.5):
         for k in range(tx.N_UNITS):
             srcs += [tx.pwl(f"d{ch}{k}", f"d{ch}{k}", b[k]), tx.pwl(f"db{ch}{k}", f"db{ch}{k}", 1 - b[k])]
     return "\n".join([f"* post-layout tx_core T={temp}", f'.lib "{PDK_LIB}" {corner}', f".temp {temp}",
-                      f'.include "{PEX}"', f"Vdd vdd 0 {tx.VDD}",
+                      f'.include "{PEX}"', (f"Vin vin_ext 0 {VIN}" if "VIN" in ports() else f"Vdd vdd 0 {tx.VDD}"),
+                      *([".nodeset v(vin_ext)=3.3", ".option rshunt=1e12"] if "VIN" in ports() else []),
                       f"Vlo s 0 dc 0 ac {lo_amp} sin(0 {lo_amp} {tx.FLO})", "Rsrc s lo_pad 50",
                       "Xcore " + " ".join(conn) + " tx_core",
                       "Cxp sfp rfp 10p", "Rxp rfp 0 50", "Cxn sfn rfn 10p", "Rxn rfn 0 50", *srcs])
