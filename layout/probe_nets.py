@@ -23,15 +23,27 @@ def net(layer, x, y):
     return n.expanded_name() if n else None
 
 
-# tx_core points (um); LDO tracks from ldo_blk_tracks.json + LDO_O (-39.39, -317.43)
+# tx_core points (um). LDO points: middle of its VSS/VOUT/VIN met3 tracks (ldo_blk_tracks.json), shifted by the
+# LDO origin computed exactly as in tx_core._ldo_origin (top edge at y=-92, west edge at x=-75), so they follow the
+# block when it changes size.
+import json
+from pathlib import Path
+here = Path(gds).resolve().parent
+lb = pya.Layout(); lb.read(str(here / "ldo_blk.gds")); bb = lb.top_cell().dbbox()
+ox, oy = round(-75.0 - bb.left, 2), round(-92.0 - bb.top, 2)
+trk = {(t["net"], t["ch"]): t for t in json.load(open(here / "ldo_blk_tracks.json"))}
+def ldo_pt(net, ch):
+    t = trk[(net, ch)]
+    return ("m3", ox + (t["x0"] + t["x1"]) / 2, oy + t["y"])
 spine = net("m5", 100.0, -86.0)
 vdd = net("m4", 100.0, 45.0)
-pts = {"LDO VSS track TOP0 (m3)": ("m3", 61.0, -254.52, "VSS"),
-       "LDO VOUT track BOT1 (m3)": ("m3", 120.0, -221.32, "VDD"),
-       "LDO VIN track BOT0 (m3)": ("m3", 150.0, -303.23, "VIN"),
+pts = {"LDO VSS track TOP0 (m3)": (*ldo_pt("VSS", "TOP0"), "VSS"),
+       "LDO VOUT track BOT1 (m3)": (*ldo_pt("VOUT", "BOT1"), "VDD"),
+       "LDO VIN track BOT0 (m3)": (*ldo_pt("VIN", "BOT0"), "VIN"),
        "I DAC VSS label (m1)": ("m1", 54.19, -74.32, "VSS"),
        "out_net VSS (m3)": ("m3", 215.5, -36.0, "VSS"),
        "bias VSS (m3)": ("m3", 85.0, -24.3, "VSS")}
+print(f"LDO origin ({ox}, {oy})")
 print("VSS spine net:", spine, "  core VDD run net:", vdd)
 if spine is None or vdd is None or spine == vdd:
     raise RuntimeError("VSS and VDD probes must find two distinct metal nets")

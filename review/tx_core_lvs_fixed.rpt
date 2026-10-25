@@ -1,0 +1,333 @@
+
+Circuit 1 cell sky130_fd_pr__nfet_01v8 and Circuit 2 cell sky130_fd_pr__nfet_01v8 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_01v8 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_01v8 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__nfet_01v8         |Circuit 2: sky130_fd_pr__nfet_01v8         
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__nfet_01v8 and sky130_fd_pr__nfet_01v8 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__pfet_01v8_hvt and Circuit 2 cell sky130_fd_pr__pfet_01v8_hvt are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_01v8_hvt is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_01v8_hvt is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__pfet_01v8_hvt     |Circuit 2: sky130_fd_pr__pfet_01v8_hvt     
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__pfet_01v8_hvt and sky130_fd_pr__pfet_01v8_hvt are equivalent.
+
+Circuit 1 cell sky130_fd_pr__cap_mim_m3_1 and Circuit 2 cell sky130_fd_pr__cap_mim_m3_1 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__cap_mim_m3_1 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__cap_mim_m3_1 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__cap_mim_m3_1      |Circuit 2: sky130_fd_pr__cap_mim_m3_1      
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__cap_mim_m3_1 and sky130_fd_pr__cap_mim_m3_1 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__res_xhigh_po_1p41 and Circuit 2 cell sky130_fd_pr__res_xhigh_po_1p41 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__res_xhigh_po_1p41 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__res_xhigh_po_1p41 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__res_xhigh_po_1p41 |Circuit 2: sky130_fd_pr__res_xhigh_po_1p41 
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__res_xhigh_po_1p41 and sky130_fd_pr__res_xhigh_po_1p41 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__pnp_05v5_W3p40L3p40 and Circuit 2 cell sky130_fd_pr__pnp_05v5_W3p40L3p40 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__pnp_05v5_W3p40L3p40 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__pnp_05v5_W3p40L3p40 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__pnp_05v5_W3p40L3p |Circuit 2: sky130_fd_pr__pnp_05v5_W3p40L3p 
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__pnp_05v5_W3p40L3p40 and sky130_fd_pr__pnp_05v5_W3p40L3p40 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__pfet_g5v0d10v5 and Circuit 2 cell sky130_fd_pr__pfet_g5v0d10v5 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_g5v0d10v5 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_g5v0d10v5 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__pfet_g5v0d10v5    |Circuit 2: sky130_fd_pr__pfet_g5v0d10v5    
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__pfet_g5v0d10v5 and sky130_fd_pr__pfet_g5v0d10v5 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__nfet_g5v0d10v5 and Circuit 2 cell sky130_fd_pr__nfet_g5v0d10v5 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_g5v0d10v5 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__nfet_g5v0d10v5 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__nfet_g5v0d10v5    |Circuit 2: sky130_fd_pr__nfet_g5v0d10v5    
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__nfet_g5v0d10v5 and sky130_fd_pr__nfet_g5v0d10v5 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__res_high_po_1p41 and Circuit 2 cell sky130_fd_pr__res_high_po_1p41 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__res_high_po_1p41 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__res_high_po_1p41 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__res_high_po_1p41  |Circuit 2: sky130_fd_pr__res_high_po_1p41  
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__res_high_po_1p41 and sky130_fd_pr__res_high_po_1p41 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__res_high_po_5p73 and Circuit 2 cell sky130_fd_pr__res_high_po_5p73 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__res_high_po_5p73 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__res_high_po_5p73 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__res_high_po_5p73  |Circuit 2: sky130_fd_pr__res_high_po_5p73  
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__res_high_po_5p73 and sky130_fd_pr__res_high_po_5p73 are equivalent.
+
+Circuit 1 cell sky130_fd_pr__res_generic_nd and Circuit 2 cell sky130_fd_pr__res_generic_nd are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__res_generic_nd is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__res_generic_nd is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__res_generic_nd    |Circuit 2: sky130_fd_pr__res_generic_nd    
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__res_generic_nd and sky130_fd_pr__res_generic_nd are equivalent.
+
+Circuit 1 cell sky130_fd_pr__pfet_01v8 and Circuit 2 cell sky130_fd_pr__pfet_01v8 are black boxes.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_01v8 is a placeholder, treated as a black box.
+Warning: Equate pins:  cell sky130_fd_pr__pfet_01v8 is a placeholder, treated as a black box.
+
+Subcircuit pins:
+Circuit 1: sky130_fd_pr__pfet_01v8         |Circuit 2: sky130_fd_pr__pfet_01v8         
+-------------------------------------------|-------------------------------------------
+1                                          |1                                          
+2                                          |2                                          
+3                                          |3                                          
+4                                          |4                                          
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes sky130_fd_pr__pfet_01v8 and sky130_fd_pr__pfet_01v8 are equivalent.
+Flattening unmatched subcell ldo_blk in circuit tx_core (1)(1 instance)
+Flattening unmatched subcell dac_mixer in circuit tx_core (1)(2 instances)
+Flattening unmatched subcell lo_path in circuit tx_core (1)(1 instance)
+Flattening unmatched subcell lo_limiter_sub in circuit tx_core (1)(2 instances)
+Flattening unmatched subcell sky130_fd_sc_hd__inv_2 in circuit tx_core (1)(2 instances)
+Flattening unmatched subcell sky130_fd_sc_hd__inv_4 in circuit tx_core (1)(2 instances)
+Flattening unmatched subcell sky130_fd_sc_hd__inv_8 in circuit tx_core (1)(4 instances)
+Flattening unmatched subcell out_net in circuit tx_core (1)(1 instance)
+Flattening unmatched subcell bias_ref in circuit tx_core (1)(1 instance)
+Flattening unmatched subcell lo_buf_blk in circuit tx_core (1)(1 instance)
+Flattening unmatched subcell out_buf_blk in circuit tx_core (1)(1 instance)
+
+Class tx_core (0):  Merged 166 parallel devices.
+Class tx_core (0):  Merged 11 series devices.
+Class tx_core (1):  Merged 108 parallel devices.
+Class tx_core (1):  Merged 17 series devices.
+Subcircuit summary:
+Circuit 1: tx_core                         |Circuit 2: tx_core                         
+-------------------------------------------|-------------------------------------------
+sky130_fd_pr__nfet_01v8 (280->221)         |sky130_fd_pr__nfet_01v8 (271->221)         
+sky130_fd_pr__pfet_g5v0d10v5 (37->15)      |sky130_fd_pr__pfet_g5v0d10v5 (15)          
+sky130_fd_pr__res_xhigh_po_1p41 (24->13)   |sky130_fd_pr__res_xhigh_po_1p41 (30->13)   
+sky130_fd_pr__res_high_po_1p41 (4)         |sky130_fd_pr__res_high_po_1p41 (4)         
+sky130_fd_pr__nfet_g5v0d10v5 (11)          |sky130_fd_pr__nfet_g5v0d10v5 (11)          
+sky130_fd_pr__res_generic_nd (1)           |sky130_fd_pr__res_generic_nd (1)           
+sky130_fd_pr__cap_mim_m3_1 (19->14)        |sky130_fd_pr__cap_mim_m3_1 (19->14)        
+sky130_fd_pr__pfet_01v8_hvt (44->8)        |sky130_fd_pr__pfet_01v8_hvt (44->8)        
+sky130_fd_pr__pfet_01v8 (35->8)            |sky130_fd_pr__pfet_01v8 (8)                
+sky130_fd_pr__pnp_05v5_W3p40L3p40 (20->3)  |sky130_fd_pr__pnp_05v5_W3p40L3p40 (20->3)  
+sky130_fd_pr__res_high_po_5p73 (2)         |sky130_fd_pr__res_high_po_5p73 (2)         
+Number of devices: 300                     |Number of devices: 300                     
+Number of nets: 245                        |Number of nets: 245                        
+---------------------------------------------------------------------------------------
+Resolving symmetries by property value.
+Resolving symmetries by pin name.
+Netlists match uniquely.
+
+Subcircuit pins:
+Circuit 1: tx_core                         |Circuit 2: tx_core                         
+-------------------------------------------|-------------------------------------------
+DBI4                                       |DBI4                                       
+DBI8                                       |DBI8                                       
+DBI7                                       |DBI7                                       
+DI4                                        |DI4                                        
+DBI3                                       |DBI3                                       
+DI8                                        |DI8                                        
+DI7                                        |DI7                                        
+DI3                                        |DI3                                        
+DBI2                                       |DBI2                                       
+DBI26                                      |DBI26                                      
+DI2                                        |DI2                                        
+DBI29                                      |DBI29                                      
+DI26                                       |DI26                                       
+DBI22                                      |DBI22                                      
+DI29                                       |DI29                                       
+DI22                                       |DI22                                       
+DBI23                                      |DBI23                                      
+DBI19                                      |DBI19                                      
+DI23                                       |DI23                                       
+DBI15                                      |DBI15                                      
+DI19                                       |DI19                                       
+DBI27                                      |DBI27                                      
+DBI11                                      |DBI11                                      
+DI15                                       |DI15                                       
+DBI1                                       |DBI1                                       
+DI27                                       |DI27                                       
+DBI13                                      |DBI13                                      
+DI11                                       |DI11                                       
+DI1                                        |DI1                                        
+DBI9                                       |DBI9                                       
+DI13                                       |DI13                                       
+DBI5                                       |DBI5                                       
+DBI14                                      |DBI14                                      
+DI9                                        |DI9                                        
+DBI17                                      |DBI17                                      
+DBI18                                      |DBI18                                      
+DI5                                        |DI5                                        
+DI14                                       |DI14                                       
+DBI6                                       |DBI6                                       
+DI17                                       |DI17                                       
+DI18                                       |DI18                                       
+DBI10                                      |DBI10                                      
+DI6                                        |DI6                                        
+DBI0                                       |DBI0                                       
+DBI20                                      |DBI20                                      
+DI10                                       |DI10                                       
+DBI24                                      |DBI24                                      
+DI0                                        |DI0                                        
+DI20                                       |DI20                                       
+DBI12                                      |DBI12                                      
+DBI28                                      |DBI28                                      
+DI24                                       |DI24                                       
+DBI16                                      |DBI16                                      
+DI12                                       |DI12                                       
+DI28                                       |DI28                                       
+DI16                                       |DI16                                       
+DBI30                                      |DBI30                                      
+DBI25                                      |DBI25                                      
+DI30                                       |DI30                                       
+DBI21                                      |DBI21                                      
+DI25                                       |DI25                                       
+DI21                                       |DI21                                       
+DBQ7                                       |DBQ7                                       
+DBQ13                                      |DBQ13                                      
+DQ16                                       |DQ16                                       
+DQ17                                       |DQ17                                       
+DBQ16                                      |DBQ16                                      
+DQ12                                       |DQ12                                       
+DBQ17                                      |DBQ17                                      
+DQ27                                       |DQ27                                       
+DBQ12                                      |DBQ12                                      
+DQ2                                        |DQ2                                        
+DQ22                                       |DQ22                                       
+DBQ27                                      |DBQ27                                      
+DBQ2                                       |DBQ2                                       
+DBQ22                                      |DBQ22                                      
+DQ18                                       |DQ18                                       
+DQ21                                       |DQ21                                       
+DBQ18                                      |DBQ18                                      
+DQ14                                       |DQ14                                       
+DQ8                                        |DQ8                                        
+DBQ21                                      |DBQ21                                      
+DQ19                                       |DQ19                                       
+DQ25                                       |DQ25                                       
+DQ11                                       |DQ11                                       
+DBQ14                                      |DBQ14                                      
+DBQ8                                       |DBQ8                                       
+DQ4                                        |DQ4                                        
+DQ1                                        |DQ1                                        
+DBQ19                                      |DBQ19                                      
+DBQ25                                      |DBQ25                                      
+DBQ11                                      |DBQ11                                      
+DQ29                                       |DQ29                                       
+DQ15                                       |DQ15                                       
+DBQ4                                       |DBQ4                                       
+DBQ1                                       |DBQ1                                       
+DBQ29                                      |DBQ29                                      
+DBQ15                                      |DBQ15                                      
+DQ10                                       |DQ10                                       
+DQ20                                       |DQ20                                       
+DQ28                                       |DQ28                                       
+DBQ10                                      |DBQ10                                      
+DQ6                                        |DQ6                                        
+DQ0                                        |DQ0                                        
+DQ5                                        |DQ5                                        
+DBQ20                                      |DBQ20                                      
+DBQ28                                      |DBQ28                                      
+DQ30                                       |DQ30                                       
+DQ24                                       |DQ24                                       
+DBQ6                                       |DBQ6                                       
+DBQ0                                       |DBQ0                                       
+DBQ5                                       |DBQ5                                       
+DQ23                                       |DQ23                                       
+DQ3                                        |DQ3                                        
+DQ9                                        |DQ9                                        
+DBQ30                                      |DBQ30                                      
+DBQ24                                      |DBQ24                                      
+DQ26                                       |DQ26                                       
+DBQ23                                      |DBQ23                                      
+DBQ3                                       |DBQ3                                       
+DBQ9                                       |DBQ9                                       
+DQ7                                        |DQ7                                        
+DQ13                                       |DQ13                                       
+DBQ26                                      |DBQ26                                      
+LO_PAD                                     |LO_PAD                                     
+VIN                                        |VIN                                        
+TXP                                        |TXP                                        
+TXN                                        |TXN                                        
+VSS                                        |VSS                                        
+---------------------------------------------------------------------------------------
+Cell pin lists are equivalent.
+Device classes tx_core and tx_core are equivalent.
+
+Final result: Circuits match uniquely.
+.

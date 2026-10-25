@@ -172,10 +172,10 @@ RF signal:
 
 | Check | Result |
 |---|---|
-| Size | 509 x 378 um (core + LDO) |
+| Size | 543 x 398 um (core + LDO) |
 | DRC | 0 errors in Magic **and** in the official KLayout deck |
-| LVS | Connectivity matches, 300 devices; strict device-property checks fail (see correction below) |
-| Parasitic extraction | Magic, 472 devices + 1,930 parasitic capacitors; post-layout EVM 13.8% vs 14.2% in the schematic |
+| LVS | Netgen match, 300 devices, **including device sizes** (strict property check; see the correction below) |
+| Parasitic extraction | Magic, 477 devices + 1,947 parasitic capacitors; post-layout EVM 13.5% vs 14.0% in the schematic |
 | Power nets | a met5 ground spine and a metal-only connectivity check (LVS alone cannot see a ground tie missing, because the substrate already joins grounds) |
 
 Most cells were drawn with gLayout primitives or Magic's SKY130 device generator, placed and routed by our own Python
@@ -185,22 +185,26 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
   because the RC-CR network is high impedance and a few femtofarads of wiring shifted its phase. Moving a capacitor's
   bottom plate to the driven node and trimming one resistor brought it to 2 degrees.
 * **The regulator needs its own start-up protection.** Without it the LDO output briefly followed the 3.3 V input on
-  power-up (up to 3.0 V on 1.8 V transistors). A start-up guard and a soft-start keep it below 1.95 V for all ramps and
-  temperatures we tested.
+  power-up (up to 3.0 V on 1.8 V transistors). A start-up guard and a soft-start keep the **extracted layout** below
+  1.95 V in every case we tested: -40, 27 and 85 C with 1, 10, 50 and 200 us supply ramps to 3.63 V (worst case
+  1.933 V at 85 C with a 50 us ramp, so the margin is thin).
 
-**Verification correction (2026-10-24 review).** A fresh strict
-LVS run finds matching connectivity (300 devices) **with device-property errors**, so the analog layout is not fully
-LVS-clean. The soft-start capacitor is physically 30 x 30 um but specified as 70 x 70 um; three coupling capacitors
-extract as 30 x 30 rather than 31 x 31 um, and two resistor dimensions also differ. The former check script ignored
-Netgen's property-error message; it now fails correctly. Consequently, the schematic startup results do not establish
-the startup behavior of this GDS. A new zero-volt startup sweep also finds failed or non-starting simulations at 85 C.
-These issues must be resolved before circuit signoff; the archived fingerprint results remain simulation results.
-Replacing only the soft-start capacitor in the schematic bench with the extracted 30 x 30 um value produces
-2.15-2.33 V startup peaks at -40/27 C for 1/50 us ramps to 3.63 V (313 ohm load), above the project's 1.95 V criterion.
-This sensitivity test uses the measured capacitor value; it is not a full parasitic-extracted startup simulation.
-A separate fresh capacitance-extracted LDO simulation confirms peaks of 2.13-2.38 V across all six tested combinations
-of -40/27/85 C and 1/50 us ramps under the same VIN/load conditions. Those transients complete and regulate afterward,
-but every startup peak exceeds the criterion.
+**Verification correction (found in review, 2026-10-24; fixed 2026-10-25).** An independent review of this project
+found that our layout check had passed a layout whose device sizes did not all match the design: Netgen reported
+"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Six devices differed:
+
+| Device | Designed | Drawn | Cause | Fix |
+|---|---|---|---|---|
+| LDO soft-start capacitor | 70 x 70 um | 30 x 30 um | Magic's capacitor generator silently caps a plate at 30 um | 3 x 2 array of 28.6 um plates (4,908 um2) |
+| PA and LO coupling capacitors (3) | 31 x 31 um | 30 x 30 um | same | design changed to the drawn 30 um (simulated effect: chip EVM 14.26% -> 14.22%, chip-to-chip fingerprint -0.8%) |
+| Limiter feedback resistors (2) | 141 um | 139.4 um | the bends of a folded resistor are not full length | segments lengthened; now 141.0 um |
+| Bias n-diffusion resistor | 80 um | 78.3 um | same | segments lengthened; now 79.98 um |
+
+The small soft-start capacitor mattered: with it, the extracted regulator overshot to 2.13-2.38 V at power-up. After the
+fix the layout passes strict LVS, including device sizes (a deliberately wrong capacitor size in the reference now
+fails the check, as it should), and the extracted regulator meets the 1.95 V limit in all cases above. The LDO layout
+also matches the exact netlist used in the simulations. The fingerprint results are unaffected: they were simulated
+with the designed values, and the post-layout fingerprint check already used the drawn 30 um capacitors.
 
 The layout file itself is in `gds/tx_core.gds.gz`. The cell below reads it and draws the main layers, so you can check
 the layout without installing any EDA tool (open it in KLayout for full detail).
@@ -537,7 +541,7 @@ md(r"""
 Wiring adds capacitance everywhere, and every chip has the same wiring, so one might expect it to wash out the small
 differences between chips. We extracted the parasitic capacitance of the transmitter core layout (before the regulator
 was added) and re-ran the Monte Carlo identification on the extracted netlist. The final chip with the regulator was
-extracted too and checked at nominal conditions: EVM 13.8% post-layout vs 14.2% in the schematic.
+extracted too and checked at nominal conditions: EVM 13.5% post-layout vs 14.0% in the schematic.
 """)
 code(r"""
 px = load("tx_pex")
@@ -631,8 +635,8 @@ and put it on the chip:
 * an error amplifier and a **5 V PMOS pass device** that turn an external 3.3 V supply into the core's 1.8 V
   (+-0.4% over all temperatures and input voltages, about 1 ohm load regulation),
 * on-chip decoupling, a **soft-start** and a **start-up guard**,
-* all laid out (509 x 223 um), with matching connectivity but unresolved device-dimension errors; see the correction
-  in Section 1. The electrical results below describe the simulated design and do not establish startup signoff.
+* all laid out (543 x 244 um): DRC-clean, strict LVS-clean, and start-up checked on the extracted layout
+  (Section 1).
 
 ![LDO layout](images/ldo_zoom.png)
 
@@ -708,8 +712,9 @@ open problem this project leaves.
 * The receiver uses ideal downconversion; real receivers add their own impairments and frequency offset. In particular,
   measured studies on real devices find temperature hurts mostly through the **crystal oscillator's frequency drift**,
   which our design avoids by taking the LO from outside the chip.
-* Startup is not signed off: see the verification correction in Section 1 for the capacitor mismatch and zero-volt
-  startup failures at 85 C. The previously reported peak margin applies only to the original tested conditions.
+* Regulator start-up was checked with parasitic capacitance but not wire resistance, at typical process and without
+  mismatch; the worst peak (1.933 V) leaves only 17 mV of margin. Starting the *schematic* from exactly 0 V at 85 C
+  still fails to converge in ngspice (the extracted layout starts normally in the same cases).
 * Not yet a complete tape-out: the digital front end is a separate signed-off block, not yet wired to the analog core
   in one layout, and there are no pads or ESD protection.
 """)

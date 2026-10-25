@@ -126,8 +126,8 @@ XRLp VDD OUTP VSS sky130_fd_pr__res_high_po_1p41 L=5.6 mult=1 m=1
 XRLn VDD OUTN VSS sky130_fd_pr__res_high_po_1p41 L=5.6 mult=1 m=1
 XCLp OUTP VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1
 XCLn OUTN VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1
-XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1
-XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1
+XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1
+XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1
 XRbp PG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1
 XRbn NG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1
 XRv1 VDD VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
@@ -157,7 +157,7 @@ XMOOB BOB PG VDD VDD sky130_fd_pr__pfet_01v8 W=20 L=1 nf=10 m=1
 .ends bias_ref
 
 .subckt lo_buf_blk LO_PAD IN VDD VSS BLO
-XClo LO_PAD LO_G sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1
+XClo LO_PAD LO_G sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1
 XRlo1 LO_G VDD VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRlo2 LO_G VSS VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XLOF VDD LO_G IN VSS sky130_fd_pr__nfet_01v8 W=20 L=0.15 nf=2 m=1
@@ -237,7 +237,12 @@ XRSS6 ldo_ss6 ldo_ss7 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRSS7 ldo_ss7 ldo_ss8 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRSS8 ldo_ss8 ldo_ss9 VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRSS9 ldo_ss9 ldo_vss_ref VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
-XCSS ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70 MF=1 m=1
+XCSS_0 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
+XCSS_1 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
+XCSS_2 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
+XCSS_3 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
+XCSS_4 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
+XCSS_5 ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=1 m=1
 XRD1 VOUT ldo_fb VSS sky130_fd_pr__res_xhigh_po_1p41 L=34.1 mult=1 m=1
 XRD2 ldo_fb ldo_r2m VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
 XRD3 ldo_r2m VSS VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1

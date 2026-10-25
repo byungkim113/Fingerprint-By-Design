@@ -51,22 +51,33 @@ ax.annotate("", xy=(1.0, 0.5), xytext=(9.8, 0.5), arrowprops=dict(arrowstyle="->
 ax.text(5.4, 0.02, "design changes go back into the loop - all before any silicon exists", ha="center", fontsize=8.5, color="#555")
 fig.savefig("images/workflow.png", dpi=150, bbox_inches="tight"); plt.close(fig)
 
-# 3. annotated layout (pixel boxes on the 1800 x 1340 render)
+# 3. annotated layout. Boxes and labels are in layout micrometres; the render (KLayout, chip fitted to the image) is
+# calibrated from its drawn-content bounding box and the chip's GDS bounding box, so the annotation follows the layout.
+import gdstk
+import numpy as np
 img = plt.imread("images/chip_layout.png")
+ys, xs = np.where((img[..., :3] < 0.97).any(axis=2))
+px0, px1, py0, py1 = xs.min(), xs.max(), ys.min(), ys.max()
+(X0, Y0), (X1, Y1) = gdstk.read_gds("../layout/tx_core.gds").top_level()[0].bounding_box()
+(lx0, ly0), (lx1, ly1) = gdstk.read_gds("../layout/ldo_blk.gds").top_level()[0].bounding_box()
+to_px = lambda x, y: (px0 + (x - X0) * (px1 - px0) / (X1 - X0), py0 + (Y1 - y) * (py1 - py0) / (Y1 - Y0))
+ldo_top, ldo_w, ldo_h = -92.0, lx1 - lx0, ly1 - ly0           # placement as in tx_core._ldo_origin
 fig, ax = plt.subplots(figsize=(12, 9))
 ax.imshow(img); ax.axis("off")
-labels = [((30, 25, 1660, 520), "transmitter core", "#1f6fd1"),
-          ((30, 545, 1760, 1315), "on-chip LDO: bandgap reference, error amplifier, 5 V pass device, soft-start, decoupling", "#8a2be2")]
+labels = [((-78.9, 64.3, 404.8, -82.6), "transmitter core", "#1f6fd1"),
+          ((-78.9, ldo_top + 2, -75.0 + ldo_w + 3.9, ldo_top - ldo_h - 3), "on-chip LDO: bandgap reference, error amplifier, "
+           "5 V pass device, soft-start, decoupling", "#8a2be2")]
 for (x0, y0, x1, y1), t, c in labels:
-    ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False, ec=c, lw=2.2, ls="--"))
-    if y0 < 100:
-        ax.text(x0 + 8, y0 - 8, t, color=c, fontsize=11, weight="bold", va="bottom")
+    (a0, b0), (a1, b1) = to_px(x0, y0), to_px(x1, y1)
+    ax.add_patch(Rectangle((a0, b0), a1 - a0, b1 - b0, fill=False, ec=c, lw=2.2, ls="--"))
+    if b0 < 100:
+        ax.text(a0 + 8, b0 - 8, t, color=c, fontsize=11, weight="bold", va="bottom")
     else:
-        ax.text(x0 + 8, y1 + 10, t, color=c, fontsize=11, weight="bold", va="top")
-blocks = [((40, 120), "LO in"), ((230, 360), "LO path\n(RC-CR + limiters)"), ((560, 140), "Q DAC + mixer"),
-          ((790, 470), "I DAC + mixer"), ((640, 300), "bias ref."), ((1080, 380), "output network + PA"),
-          ((1360, 100), "output\nbuffer")]
+        ax.text(a0 + 8, b1 + 10, t, color=c, fontsize=11, weight="bold", va="top")
+blocks = [((-75.9, 36.1), "LO in"), ((-19.5, -35.1), "LO path\n(RC-CR + limiters)"), ((78.4, 30.2), "Q DAC + mixer"),
+          ((146.6, -67.7), "I DAC + mixer"), ((102.1, -17.3), "bias ref."), ((232.7, -41.0), "output network + PA"),
+          ((315.8, 42.0), "output\nbuffer")]
 for (x, y), t in blocks:
-    ax.text(x, y, t, fontsize=9.5, color="black", bbox=dict(fc="white", ec="#999", alpha=0.85, pad=2))
+    ax.text(*to_px(x, y), t, fontsize=9.5, color="black", bbox=dict(fc="white", ec="#999", alpha=0.85, pad=2))
 fig.savefig("images/chip_layout_annotated.png", dpi=110, bbox_inches="tight"); plt.close(fig)
 print("diagrams written")

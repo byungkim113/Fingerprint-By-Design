@@ -15,8 +15,12 @@ import numpy as np
 
 LAID_OUT = '--laid-out' in sys.argv
 PEX = '--pex' in sys.argv
-OUT = ROOT / ('review/ldo-pex-output' if PEX else 'review/ldo-layout-values-output' if LAID_OUT else 'review/ldo-output')
-OUT.mkdir(exist_ok=True)
+import os
+# optional overrides: LDO_PEX_FILE (extracted netlist to test), LDO_OUT (output folder)
+PEX_FILE = Path(os.environ.get('LDO_PEX_FILE', ROOT / 'review/ldo-pex/ldo_blk_pex_c.spice'))
+OUT = Path(os.environ['LDO_OUT']) if 'LDO_OUT' in os.environ else \
+    ROOT / ('review/ldo-pex-output' if PEX else 'review/ldo-layout-values-output' if LAID_OUT else 'review/ldo-output')
+OUT.mkdir(parents=True, exist_ok=True)
 
 def startup(job):
     temp, ramp = job
@@ -26,7 +30,7 @@ def startup(job):
     control = f'save v(vout) v(vin)\ntran 10n {stop} 0 50n\nwrdata wave.txt v(vout) v(vin)'
     text = ldo.bench(control, temp=temp, vin=3.63)
     if PEX:
-        extracted = ROOT / 'review/ldo-pex/ldo_blk_pex_c.spice'
+        extracted = PEX_FILE
         text = text.replace('X1 vin vout 0 ldo', f'.include "{extracted}"\nX1 vin vout 0 ldo_blk')
     if LAID_OUT:
         text = text.replace('XCss ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70',
@@ -46,7 +50,9 @@ def startup(job):
     return result
 
 if __name__ == '__main__':
-    jobs = [(t, ramp) for t in (-40, 27, 85) for ramp in ((1, 50) if (LAID_OUT or PEX) else (1, 10, 50, 200, 1000))]
+    ramps = [float(x) for x in os.environ['LDO_RAMPS'].split(',')] if 'LDO_RAMPS' in os.environ else \
+        ((1, 50) if (LAID_OUT or PEX) else (1, 10, 50, 200, 1000))           # LDO_RAMPS: optional, in us
+    jobs = [(t, ramp) for t in (-40, 27, 85) for ramp in ramps]
     with concurrent.futures.ThreadPoolExecutor(2) as ex:
         results = list(ex.map(startup, jobs))
     (OUT / 'startup.json').write_text(json.dumps(results, indent=2))

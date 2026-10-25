@@ -61,10 +61,11 @@ DEVICES = (
        ("GIN", "n5_g_1_05", {"D": "ldo_y", "G": "ldo_x", "S": "VSS"}),
        ("GSW", "p5_g_sw", {"D": "ldo_g", "G": "ldo_y", "S": "VIN", "B": "VIN"}),
        ("GCX", "mim10", {"C1": "ldo_x", "C2": "VIN"}), ("GCY", "mim10", {"C1": "ldo_y", "C2": "VSS"}),
-       # soft-start: 10 x 50k between VREF and the OTA input, 70x70 um MIM to VSS
+       # soft-start: 10 x 50k between VREF and the OTA input, 6 x (28.6 x 28.6 um) MIM to VSS (4908 um2; the
+       # generator caps a single MIM at 30 um, so the earlier "70 x 70" cell was silently drawn 30 x 30)
        *[(f"RSS{i}", "xh_3525", {"R1": "ldo_vref" if i == 0 else f"ldo_ss{i}", "R2": "ldo_vss_ref" if i == 9 else f"ldo_ss{i + 1}"})
          for i in range(10)],
-       ("CSS", "mim70", {"C1": "ldo_vss_ref", "C2": "VSS"}),
+       ("CSS", "mimss", {"C1": "ldo_vss_ref", "C2": "VSS"}),
        ("RD1", "xh_341", {"R1": "VOUT", "R2": "ldo_fb"}),
        ("RD2", "xh_3525", {"R1": "ldo_fb", "R2": "ldo_r2m"}), ("RD3", "xh_3525", {"R1": "ldo_r2m", "R2": "VSS"})]
     + [(f"CD{i}", "n18_dec", {"G": "VOUT", "S": "VSS", "D": "VSS", **({"B": "VSS"} if i == 0 else {})})
@@ -80,7 +81,9 @@ def cell_info(name):
     terms = []
     for t in c.labels:
         # finger-numbered MOS labels (D0, S1, G2 ...) -> role; resistor/MIM terminal names keep their digit
-        role = t.text if t.text in ("R1", "R2", "C1", "C2") else re.sub(r"\d+$", "", t.text)
+        # MIM arrays label each column C1_<i>/C2_<i>; the columns are separate nets inside the cell, so each label
+        # becomes a C1/C2 terminal and the router joins them
+        role = t.text if t.text in ("R1", "R2", "C1", "C2") else re.sub(r"_\d+$|\d+$", "", t.text)
         x, y = t.origin
         terms.append((role, x, y, any(p.contain((x, y)) for p in m1), t.layer))
     # multi-finger MOS: the generator labels only some S/D strips; take every tall m1 strip and give the
@@ -201,6 +204,7 @@ def netlist(name="ldo_blk"):
             "p5_g_sw": (40, 0.5, 4),
             "n5_05_4": (0.5, 4, 1), "n5_4_2": (4, 2, 1), "n5_8_2": (8, 2, 1), "n5_20_2": (20, 2, 1)}
     rl = {"xh_8": 8, "xh_39": 39, "xh_341": 34.1, "xh_3525": 35.25}
+    mim = {"mim10": (10, 1), "mim22": (22, 1), "mimss": (28.6, 6)}
     lines = [f".subckt {name} VIN VOUT VSS"]
     for inst, cell, nets in DEVICES:
         if cell in size:
@@ -212,9 +216,10 @@ def netlist(name="ldo_blk"):
             lines.append(f"X{inst} VSS VSS {nets['Emitter']} {pnp} m=1")
         elif cell in rl:
             lines.append(f"X{inst} {nets['R1']} {nets['R2']} VSS {xh} L={rl[cell]} mult=1 m=1")
-        elif cell.startswith("mim"):
-            sz = int(cell[3:])
-            lines.append(f"X{inst} {nets['C1']} {nets['C2']} sky130_fd_pr__cap_mim_m3_1 W={sz} L={sz} MF=1 m=1")
+        elif cell in mim:                              # drawn plate size and count, not the cell name
+            sz, n = mim[cell]
+            lines += [f"X{inst}{'_' + str(k) if n > 1 else ''} {nets['C1']} {nets['C2']} sky130_fd_pr__cap_mim_m3_1 "
+                      f"W={sz} L={sz} MF=1 m=1" for k in range(n)]
         elif cell == "n18_dec":
             lines.append(f"X{inst} VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 nf=1 m=1")
     return "\n".join(lines + [f".ends {name}", ""])

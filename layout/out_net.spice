@@ -3,8 +3,8 @@ XRLp VDD OUTP VSS sky130_fd_pr__res_high_po_1p41 L=5.6 mult=1 m=1
 XRLn VDD OUTN VSS sky130_fd_pr__res_high_po_1p41 L=5.6 mult=1 m=1
 XCLp OUTP VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1
 XCLn OUTN VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1
-XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1
-XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1
+XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1
+XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1
 XRbp PG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1
 XRbn NG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1
 XRv1 VDD VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1

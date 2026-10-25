@@ -79,7 +79,7 @@ def lo_buf():
     pdk.activate()
     top = Component("lo_buf_blk_hier")
     R.place(top, HERE / "lo_buf.gds", 0, 0)
-    R.place(top, P / "c_31.gds", -45, -15)                 # Clo: C1 top plate (-29.8, 0.2), C2 strap (-13.1, 0.2)
+    R.place(top, P / "c_30.gds", -45, -15)                 # Clo: C1 top plate (-29.8, 0.2), C2 strap (-13.1, 0.2)
     R.place(top, P / "r_x50k.gds", 12, -50)                # Rlo1: top pad (13.27, -11.1) -> LO_G, bottom -> VDD
     R.place(top, P / "r_x50k.gds", 16, -50)                # Rlo2: top pad (17.27, -11.1) -> LO_G, bottom -> VSS
     T = {"VDD": 9.5, "VSS": 10.7, "IN": 11.9, "LO_G": -9.5, "BLO": -12.5}
@@ -113,7 +113,7 @@ def lo_buf():
 def lo_netlist(name="lo_buf_blk"):
     n = "sky130_fd_pr__nfet_01v8"
     return "\n".join([f".subckt {name} LO_PAD IN VDD VSS BLO",
-                      "XClo LO_PAD LO_G sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1",
+                      "XClo LO_PAD LO_G sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1",
                       "XRlo1 LO_G VDD VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1",
                       "XRlo2 LO_G VSS VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1",
                       f"XLOF VDD LO_G IN VSS {n} W=20 L=0.15 nf=2 m=1",

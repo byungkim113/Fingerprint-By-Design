@@ -1073,3 +1073,31 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   and sim/ = 6 unchanged copies of the scripts the live demo needs); the setup cell fetches the folder from the
   official repo, then the user's fork branch isscc27-fingerprint-by-design, then Code-A-Chip. Colab badge -> fork
   branch path. OPEN (user decision): make Code-A-Chip public, or the "Reproducing" section's repo links stay private.
+- 2026-10-25: REVIEW FOLLOW-UP (Richard's review 61b07bf, user-approved fix). Verified independently: ldo_blk.gds has no
+  70x70 capm (largest plate 30x30; Magic's MIM generator clamps w,l to 30 um silently); Netgen reports "match uniquely
+  with property errors" for ldo_blk and tx_core (6 errors). Root causes: generator clamp (CSS 70 -> 30; Ccp/Ccn/Clo
+  31 -> 30), snake-resistor bends (Rfb 4x35.25 extracts 139.41; Rs 4x20 extracts 78.34), and ldo_block.netlist() taking
+  the MIM size from the cell NAME. Planned fixes (decided before re-running anything):
+    CSS: 3x2 array of 28.6x28.6 um (4907.8 um2; DRC 0); schematic W=28.6 L=28.6 MF=6 m=6 (model mf scales mismatch
+         only, instance m multiplies C).
+    Rfb: snake segment 35.6475 um -> extracts 141.01 (schematic 141 unchanged). Rs: segment 20.41 -> 79.98 (80 unchanged).
+    Ccp/Ccn/Clo: schematic 31 -> 30 um (drawn value; > 30 needs an array). The post-layout fingerprint run already
+         used 30 um; effect of 31 -> 30 to be measured on the nominal chip + live-demo fingerprints.
+    Pass criteria: strict LVS (no property errors) on ldo_blk and tx_core; DRC 0 Magic + KLayout; extracted-LDO
+    start-up peak <= 1.95 V for -40/27/85 C x 1/50 us ramps (Richard's bench); if it fails, report and retune.
+  RESULTS (2026-10-25): baseline rebuild with unchanged code reproduced every committed block GDS shape-for-shape.
+  After the fixes: ldo_blk 543.17 x 243.67 um, Magic DRC 0, KLayout DRC 0, strict LVS match (no property errors);
+  negative control (one CSS plate set to 27 um in the reference) -> LVS MISMATCH, as required. LDO layout vs the
+  SIMULATION netlist (sim/ldo.py bench subckts; resistor body node 0 -> VSS) -> strict match. tx_core 543.18 x 397.87 um,
+  DRC 0 Magic + KLayout, strict LVS match 300 devices; metal-only probes 6/6 OK (LDO probe points now computed from
+  ldo_blk_tracks.json + the LDO origin). PEX (C): 477 devices, 1947 caps.
+  START-UP on the capacitance-extracted ldo_blk (review/check_ldo.py --pex, VIN 0 -> 3.63 V, 313 ohm):
+    pre-registered 1/50 us: -40C 1.800/1.882, 27C 1.802/1.912, 85C 1.797/1.933 V -> PASS (all <= 1.95 V, all regulate)
+    extra 10/200 us (not pre-registered): -40C 1.800/1.856, 27C 1.802/1.883, 85C 1.797/1.914 V.
+    (old layout, Richard: 2.13-2.38 V.) Limits: C-only extraction, tt, no mismatch; 17 mV margin at 85C/50 us.
+  31 -> 30 um coupling caps (live demo, same seeds/frame, Mac): nominal EVM 17.19 -> 16.97%, chips 14.26/14.28 ->
+    14.22/14.24%; chip1-chip2 fingerprint rms 6.62e-3 -> 6.57e-3, pattern corr 0.9997 -> negligible.
+    notebook/data/live_reference.json regenerated with 30 um (the notebook asserts nominal agreement < 1e-5).
+  Generator inputs now tracked: layout/work/ldo_cells (gds + Magic tcl), layout/work/passives, layout/work/rccr/*.gds.
+  POST-LAYOUT nominal with LDO (sim/pex_nominal_ldo.py, new layout, 30 um caps): schematic |gain| 0.0764, EVM 14.04%,
+    Q/I -1.6 deg; post-layout 0.0727, 13.50%, -2.5 deg (old: 0.0763/14.23% vs 0.0748/13.82%).

@@ -97,3 +97,36 @@ Identification percentages concern synthetic virtual chips, a known repeated fra
 The initial fast-forward pull encountered rewritten remote history. Both local commits had identical trees to their rewritten equivalents. The original local branch was preserved as `backup/pre-review-20261024`, and `main` was aligned to remote `bb00f2e`. The review fixes and evidence are included together in the subsequent review commit. The original circuit GDS files and archived study result JSON files were preserved.
 
 Verification used the project's pinned SKY130 hash, ngspice 47, Magic 8.3.684, Netgen 1.5.324, and KLayout 0.30.12. The KLayout package came from the [official download page](https://www.klayout.de/build.html); its published package checksum matched. Review scripts in this folder retain the commands and measurements needed to repeat the targeted checks.
+
+## Follow-up fixes — 2026-10-25
+
+All six property errors above were confirmed and fixed; the strict check now passes.
+
+| Device | Cause | Fix | Now |
+|---|---|---|---|
+| LDO soft-start CSS (70 → 30 µm) | Magic's MIM generator clamps `w`/`l` to 30 µm without an error; `ldo_block.netlist()` took the size from the cell name | 3 × 2 array of 28.6 µm plates (`mimss`, 4,907.8 µm²); schematic `W=28.6 L=28.6 MF=6 m=6` (the model's `mf` scales mismatch only); netlist sizes from a table of drawn values | 6 × 28.6 µm, strict match |
+| Ccp/Ccn/Clo (31 → 30 µm) | same clamp | schematic set to the drawn 30 µm (`c_30`) | strict match |
+| Limiter Rfb (141 → 139.41 µm) | snake-resistor bends | segment 35.25 → 35.6475 µm | extracts 141.01 µm |
+| Bias Rs (80 → 78.34 µm) | snake-resistor bends | segment 20 → 20.41 µm | extracts 79.98 µm |
+
+Evidence (fresh runs, same tool versions):
+
+- Unchanged code first rebuilt every committed block GDS shape-for-shape, so the differences below come only from the fixes.
+- `ldo_blk` 543.17 × 243.67 µm and `tx_core` 543.18 × 397.87 µm: Magic DRC 0, KLayout DRC 0, strict LVS match with no property errors (`ldo_blk_lvs_fixed.rpt`, `tx_core_lvs_fixed.rpt`). Negative control: setting one soft-start plate to 27 µm in the reference makes the check fail.
+- The LDO layout also strictly matches the simulation netlist from `sim/ldo.py` (`ldo_blk_vs_sim_lvs_fixed.rpt`; resistor body node `0` written as `VSS`).
+- Metal-only probes: 6/6 pass. The LDO probe points are now computed from `ldo_blk_tracks.json` and the LDO origin.
+- Capacitance-extracted LDO start-up (`check_ldo.py --pex`, `LDO_PEX_FILE=review/ldo-pex-fixed/ldo_blk_pex_c.spice`):
+
+  | Ramp | −40 °C | 27 °C | 85 °C |
+  |---|---:|---:|---:|
+  | 1 µs | 1.800 V | 1.802 V | 1.797 V |
+  | 50 µs | 1.882 V | 1.912 V | 1.933 V |
+  | 10 µs (extra) | 1.800 V | 1.802 V | 1.797 V |
+  | 200 µs (extra) | 1.856 V | 1.883 V | 1.914 V |
+
+  All runs complete and regulate (`ldo-pex-fixed-output*/startup.json`). The 85 °C / 50 µs margin is only 17 mV, and these runs are C-only extraction at tt without mismatch.
+- The schematic zero-volt start at 85 °C still fails numerically (`ldo-schematic-fixed-output`); the extracted layout starts in the same cases.
+- Changing the coupling capacitors from 31 to 30 µm, measured with the live demo (same seeds and frame): chip EVM 14.26 → 14.22 %; chip-to-chip fingerprint 6.62 → 6.57 × 10⁻³ rms (pattern correlation 0.9997).
+- Post-layout nominal with LDO: EVM 13.50 % vs 14.04 % in the schematic.
+- Notebook live reference regenerated with 30 µm capacitors; the notebook runs with 0 errors and 11 figures.
+- The generator inputs are now versioned: `layout/work/ldo_cells`, `layout/work/passives` (cells and Magic scripts) and `layout/work/rccr/*.gds`.

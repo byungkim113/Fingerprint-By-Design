@@ -15,8 +15,8 @@ predict, explain and control a transmitter's fingerprint at design time, using o
 We designed and verified a transmitter in SKY130:
 
 * an analog core (I/Q current-steering DACs, Gilbert mixers, LO path, PA, output buffer, bias reference) and an on-chip
-  LDO regulator with a bandgap reference: DRC-clean in Magic and KLayout and parasitic-extracted, with unresolved
-  LVS device-dimension errors described below;
+  LDO regulator with a bandgap reference: DRC-clean in Magic and KLayout, strict LVS-clean (device sizes included),
+  parasitic-extracted, with regulator start-up checked on the extracted layout;
 * a digital front end (SPI port, 128-sample frame memory, thermometer decoders) taken through LibreLane to a routed,
   DRC/LVS-clean layout and tested at RTL and gate level.
 
@@ -32,12 +32,13 @@ We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. K
 
 All tests were pre-registered; failures are reported.
 
-**Verification correction (2026-10-24):** the notebook runs successfully, but a fresh analog LVS review found
-device-property mismatches that the original check script ignored. In particular, the LDO soft-start capacitor is
-30 x 30 um in the GDS versus 70 x 70 um in the schematic. Zero-volt startup tests also fail or do not start at 85 C.
-Using the measured capacitor value produces 2.15-2.33 V startup peaks in the tested -40/27 C schematic benches.
-A fresh capacitance-extracted LDO run confirms 2.13-2.38 V peaks over six -40/27/85 C startup cases.
-See Section 1 of the notebook and `../review/REVIEW.md`; analog circuit signoff remains open.
+**Verification correction (found 2026-10-24, fixed 2026-10-25):** an independent review found that the original LVS
+check ignored Netgen's device-property errors. Six devices were drawn at different sizes from the design; the most
+important was the LDO soft-start capacitor (30 x 30 um instead of 70 x 70 um, because Magic's generator silently caps a
+plate at 30 um), which made the extracted regulator overshoot to 2.13-2.38 V at power-up. The layout was corrected
+(3 x 2 capacitor array, lengthened resistors, coupling capacitors set to the drawn 30 um) and now passes strict LVS; the
+extracted regulator peaks at 1.80-1.93 V over -40/27/85 C and 1-200 us ramps (limit 1.95 V). Section 1 of the
+notebook gives the details.
 
 ## Contents
 

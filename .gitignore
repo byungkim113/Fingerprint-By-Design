@@ -1,7 +1,14 @@
 .venv/
 .venv-layout/
 __pycache__/
-layout/work/
+# layout/work: scratch output, except the generated device cells (and their Magic scripts) that the
+# layout generators read
+layout/work/*
+!layout/work/ldo_cells/
+!layout/work/passives/
+!layout/work/rccr/
+layout/work/rccr/*
+!layout/work/rccr/*.gds
 sim/test/
 *.log
 .DS_Store
@@ -23,3 +30,5 @@ review/ldo-layout-values-output/*/
 review/ldo-pex-output/*/
 review/ldo-pex/*.ext
 review/ldo-pex/*.tcl
+review/ldo-pex-fixed-output*/*/
+review/ldo-schematic-fixed-output/*/

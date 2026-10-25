@@ -86,7 +86,7 @@ def subckt():
         # soft-start: the OTA sees VREF through a 500k x ~10 pF RC (tau ~5 us), so VOUT ramps up under regulation
         # instead of rushing past 1.8 V while the OTA is railed (start-up overshoot 2.0-2.8 V without it)
         *([f"Rss_short {vref} {p}vss_ref 1"] if os.environ.get("LDO_NO_SS") else
-          res("Rss", vref, p + "vss_ref", 10) + [f"XCss {p}vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70 MF=1 m=1"]),
+          res("Rss", vref, p + "vss_ref", 10) + [f"XCss {p}vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=28.6 L=28.6 MF=6 m=6"]),   # 6 parallel 28.6 um plates as drawn (mf: mismatch of 6 plates; m: 6x capacitance)
         # start-up guard: until VREF is up, hold the pass gate at VIN (pass device off) - without it VOUT followed
         # VIN to ~3.0 V during power-up (found 2026-10-11). x: weak pull-up, pulled low by VREF; y = NOT x; MSW on while y low
         *([] if os.environ.get("LDO_NO_GUARD") else [

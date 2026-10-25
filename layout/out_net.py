@@ -43,7 +43,7 @@ def bar_stub(top, x, y, y_to, hi="m3"):
 def build(name="out_net"):
     pdk.activate()
     top = Component(f"{name}_hier")
-    for f, o in (("c_11", (0, 0)), ("c_11", (0, 16)), ("c_31", (20, 0)), ("c_31", (20, 36)),
+    for f, o in (("c_11", (0, 0)), ("c_11", (0, 16)), ("c_30", (20, 0)), ("c_30", (20, 36)),
                  ("r_load", (-8, 0)), ("r_load", (-8, 16)), ("r_x20k", (56, 4)), ("r_x20k", (56, 40)),
                  ("r_x50k", (62, 4)), ("r_x50k", (68, 4)), ("r_pa", (92, 40)), ("r_pa", (100, 40))):
         R.place(top, P / f"{f}.gds", *o)
@@ -140,8 +140,8 @@ def netlist(name="out_net"):
         "XRLn VDD OUTN VSS sky130_fd_pr__res_high_po_1p41 L=5.6 mult=1 m=1",
         "XCLp OUTP VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1",
         "XCLn OUTN VSS sky130_fd_pr__cap_mim_m3_1 W=11 L=11 MF=1 m=1",
-        "XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1",
-        "XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=31 L=31 MF=1 m=1",
+        "XCcp OUTP PG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1",
+        "XCcn OUTN NG sky130_fd_pr__cap_mim_m3_1 W=30 L=30 MF=1 m=1",
         "XRbp PG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1",
         "XRbn NG VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=14.1 mult=1 m=1",
         "XRv1 VDD VB VSS sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1",

@@ -143,7 +143,7 @@ def passives_real():
     (x10) from an external 100 uA reference pin; PA gate bias from a resistor divider."""
     return [RES("RLp", "vdd", "outp", "load"), RES("RLn", "vdd", "outn", "load"),
             CAP("CLp", "outp", "0", 11), CAP("CLn", "outn", "0", 11),
-            CAP("Ccp", "outp", "pg", 31), CAP("Ccn", "outn", "ng", 31),
+            CAP("Ccp", "outp", "pg", 30), CAP("Ccn", "outn", "ng", 30),   # 30 um: the MIM generator maximum (was 31 until 2026-10-25)
             RES("Rbp", "pg", "vb", "20k"), RES("Rbn", "ng", "vb", "20k"),
             RES("Rv1", "vdd", "vb", "50k"), RES("Rv2", "vb", "0", "50k"),
             *bias_ref.core(outs=(("gi", 1), ("gq", 1), ("pab", 10), ("lob_bias", 10), ("ob_bias", 10))),
@@ -165,7 +165,7 @@ def lo_input_buffer():
     follower (gate biased at VDD/2 by a 50k/50k divider) -> RC-CR input node 'in'.
     Follower sink: 200 uA, mirrored from the bias reference (100 uA x 2)."""
     return ["Rsrc s lo_pad 50",                                        # off-chip source impedance
-            CAP("Clo", "lo_pad", "lo_g", 31),
+            CAP("Clo", "lo_pad", "lo_g", 30),
             RES("Rlo1", "vdd", "lo_g", "50k"), RES("Rlo2", "lo_g", "0", "50k"),
             f"XLOF vdd lo_g in 0 {NF} W=20 L=0.15 nf=2",
             f"XLOB lob_bias lob_bias 0 0 {NF} W=1 L=0.5",
