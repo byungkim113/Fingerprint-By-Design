@@ -13,6 +13,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 WORK = HERE / "work" / "tx"
+END_TIME = 128 / 25e6  # all LDO study frames are 128 samples at 25 MS/s
 
 
 def incomplete():
@@ -22,7 +23,7 @@ def incomplete():
             f = d / f"tx_out_{s}"
             try:
                 a = np.loadtxt(f)
-                ok = a.ndim == 2 and a[-1, 0] >= 5.0e-6
+                ok = a.ndim == 2 and a[-1, 0] >= END_TIME * (1 - 1e-6)
             except Exception:
                 ok = False
             if not ok:
@@ -55,7 +56,7 @@ def rerun(d, seed):
         subprocess.run(["ngspice", "-b", "c.sp"], cwd=tmp, stdout=log, stderr=subprocess.STDOUT, timeout=4 * 3600)
     f = tmp / f"tx_out_{seed}"
     a = np.loadtxt(f) if f.exists() else None
-    if a is not None and a.ndim == 2 and a[-1, 0] >= 5.0e-6:
+    if a is not None and a.ndim == 2 and a[-1, 0] >= END_TIME * (1 - 1e-6):
         shutil.copy(f, d / f"tx_out_{seed}")
         return "fixed"
     return "still failing"

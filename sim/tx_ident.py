@@ -120,7 +120,7 @@ def frames(corner, seeds):
     return np.array(Y), ops
 
 
-MASKED = "--masked" in sys.argv     # sensitivity rerun: drop levels of codes the frame never uses
+MASKED = "--unmasked" not in sys.argv  # exclude unseen levels; --unmasked reproduces the legacy analysis
 
 
 def features(z, ci, cq):

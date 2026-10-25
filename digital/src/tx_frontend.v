@@ -16,7 +16,7 @@
 // no enable multiplexers and the idle ring draws no clock power.
 //
 // SPI: mode 0, MSB first, 32-bit frames {rw, 7'b0, addr[7:0], data[15:0]}; rw=1 writes.
-// SPI pins are sampled in the clk domain (clk must be at least 4x sck), so the whole
+// SPI pins are sampled in the clk domain (clk must be at least 8x sck), so the whole
 // block has one clock. Reads return the addressed register on miso during the data phase.
 //   addr 0x00  DATA: write pushes {I[4:0], Q[4:0]} (data[9:0]) into the ring; after 128
 //              writes the ring holds the frame in write order. Read returns the oldest

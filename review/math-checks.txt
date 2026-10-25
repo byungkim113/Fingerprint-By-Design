@@ -1,0 +1,31 @@
+Python syntax sim 31 PASS
+Python syntax analysis 12 PASS
+Python syntax layout 18 PASS
+Python syntax notebook 8 PASS
+Bundled script identical bias_ref.py True
+Bundled script identical live_demo.py True
+Bundled script identical lo.py True
+Bundled script identical spice.py True
+Bundled script identical tx_full.py True
+Bundled script identical tx_validate.py True
+Bundled GDS identical tx_core True
+Bundled GDS identical tx_frontend True
+RRC energy 1.0
+Thermometer exhaustive True
+Digital frame matches analog stimulus True
+Level fit rank frame1 rows 127 rank 40 observed columns 40
+Ideal linear ladder residual rms frame1 unmasked 0.15834470005628926 masked 6.73768544966751e-16
+Level fit rank frame2 rows 122 rank 42 observed columns 42
+Ideal linear ladder residual rms frame2 unmasked 0.05355544723449021 masked 7.323108261807153e-16
+Level fit rank frame3 rows 121 rank 38 observed columns 38
+Ideal linear ladder residual rms frame3 unmasked 0.17082931269913593 masked 1.1675543352558426e-15
+Level fit rank frame4 rows 105 rank 42 observed columns 42
+Ideal linear ladder residual rms frame4 unmasked 0.04669315543373622 masked 7.801582217669278e-16
+Level fit rank frame5 rows 96 rank 36 observed columns 36
+Ideal linear ladder residual rms frame5 unmasked 0.1567224087048501 masked 1.1748002339962171e-15
+Level fit rank demo rows 66 rank 43 observed columns 43
+Ideal linear ladder residual rms demo unmasked 4.969883233089927e-16 masked 4.969883233089927e-16
+Downconversion max complex error 0.0001491235359087878
+Mahalanobis and one-component Gaussian mixture vs independent scipy distances: PASS 0.28125
+Finite numeric arrays in source archives: 60
+Errors []

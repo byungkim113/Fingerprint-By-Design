@@ -64,13 +64,17 @@ def main():
     d.mkdir(parents=True, exist_ok=True)
     shutil.copy(SPINIT, d / ".spiceinit")
     ci, cq = demo_codes()
+    # Never let an incomplete rerun reuse an older successful waveform.
+    for tag in ["nominal"] + [str(k) for k in range(1, n + 1)]:
+        (d / f"tx_out_{tag}").unlink(missing_ok=True)
     t0, procs = time.time(), []
     for tag, k in (("mc", n), ("nominal", 0)):                # two ngspice processes in parallel
         (d / f"{tag}.sp").write_text(netlist(ci, cq, k))
         procs.append(subprocess.Popen(["ngspice", "-b", f"{tag}.sp"], cwd=d, stdout=open(d / f"{tag}.log", "w"),
                                       stderr=subprocess.STDOUT))
-    for p in procs:
-        p.wait()
+    statuses = [p.wait() for p in procs]
+    if any(statuses):
+        sys.exit(f"ngspice failed ({statuses}); inspect the logs in {d}")
     secs = time.time() - t0
     ideal = (2 * ci / tx.N_UNITS - 1) + 1j * (2 * cq / tx.N_UNITS - 1)
     chips = {}
@@ -79,6 +83,8 @@ def main():
         if not f.exists():
             sys.exit(f"chip {s}: no waveform, see the logs in {d}")
         t, w = tx.load_wr(f)
+        if t[-1] < len(ci) / tx.FS * (1 - 1e-6):
+            sys.exit(f"chip {s}: incomplete transient; see the logs in {d}")
         y = tx.downconvert(t, w["rfp"] - w["rfn"], len(ci))
         y = y / ((y @ ideal.conj()) / (ideal @ ideal.conj()))
         evm = 100 * np.sqrt(np.mean(np.abs(y - ideal) ** 2) / np.mean(np.abs(ideal) ** 2))

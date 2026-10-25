@@ -11,7 +11,7 @@ rc=$PDK_ROOT/sky130A/libs.tech/magic/sky130A.magicrc
 work=$here/work/$cell/pex
 mkdir -p "$work"; cd "$work"
 cat > pex.tcl <<EOF
-gds read $here/$cell.gds
+gds read {$here/$cell.gds}
 load $cell
 select top cell
 extract do local

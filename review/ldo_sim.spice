@@ -1,0 +1,57 @@
+.subckt bandgap VIN VBG VSS PB
+XQ1 VSS VSS bg_a sky130_fd_pr__pnp_05v5_W3p40L3p40 m=2
+XQ2 VSS VSS bg_bq sky130_fd_pr__pnp_05v5_W3p40L3p40 m=16
+XQ3 VSS VSS bg_q3e sky130_fd_pr__pnp_05v5_W3p40L3p40 m=2
+XR10 bg_b bg_bq VSS sky130_fd_pr__res_xhigh_po_1p41 L=8.0 mult=1 m=1
+XR20 VBG R2_1 VSS sky130_fd_pr__res_xhigh_po_1p41 L=39.0 mult=1 m=1
+XR21 R2_1 bg_q3e VSS sky130_fd_pr__res_xhigh_po_1p41 L=39.0 mult=1 m=1
+XMA bg_a PB VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32
+XMB bg_b PB VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32
+XMO VBG PB VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32
+XMT bg_tl PB VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32
+XM1 bg_oa bg_a bg_tl VIN sky130_fd_pr__pfet_g5v0d10v5 W=8 L=16
+XM2 bg_ob bg_b bg_tl VIN sky130_fd_pr__pfet_g5v0d10v5 W=8 L=16
+XM3 bg_oa bg_oa VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32
+XM4 bg_ob bg_oa VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32
+XM5 PB bg_ob VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=16 L=32
+XM6 PB PB VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=16 L=32
+XCc PB bg_ob sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1
+XMS1 bg_st VSS VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=0.42 L=50
+XMS3 bg_st VBG VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=4 L=0.5
+XMS2 PB bg_st VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=0.5 L=4
+.ends bandgap
+
+.subckt ldo VIN VOUT VSS
+XBG VIN ldo_vref VSS ldo_pb bandgap
+XMTP ldo_tb ldo_pb VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=4 L=8
+XMTB ldo_tb ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=4 L=2
+XMT ldo_tail ldo_tb VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=8 L=2
+XMA ldo_a ldo_fb ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20.0 L=2.0
+XMB ldo_g ldo_vss_ref ldo_tail VSS sky130_fd_pr__nfet_g5v0d10v5 W=20.0 L=2.0
+XMC ldo_a ldo_a VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=20.0 L=2.0
+XMD ldo_g ldo_a VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=20.0 L=2.0
+XMP VOUT ldo_g VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=200.0 L=0.5 nf=20
+XRss0 ldo_vref Rss_1 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss1 Rss_1 Rss_2 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss2 Rss_2 Rss_3 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss3 Rss_3 Rss_4 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss4 Rss_4 Rss_5 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss5 Rss_5 Rss_6 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss6 Rss_6 Rss_7 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss7 Rss_7 Rss_8 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss8 Rss_8 Rss_9 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XRss9 Rss_9 ldo_vss_ref 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XCss ldo_vss_ref VSS sky130_fd_pr__cap_mim_m3_1 W=70 L=70 MF=1 m=1
+XRDP ldo_x VSS VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=0.42 L=20
+XRDN ldo_x ldo_vref VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=2 L=1
+XIP ldo_y ldo_x VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=2 L=0.5
+XIN ldo_y ldo_x VSS VSS sky130_fd_pr__nfet_g5v0d10v5 W=1 L=0.5
+XMSW ldo_g ldo_y VIN VIN sky130_fd_pr__pfet_g5v0d10v5 W=40 L=0.5 nf=4
+XCX ldo_x VIN sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1
+XCY ldo_y VSS sky130_fd_pr__cap_mim_m3_1 W=10 L=10 MF=1 m=1
+XCc ldo_g VOUT sky130_fd_pr__cap_mim_m3_1 W=22 L=22 MF=1 m=1
+XR10 VOUT ldo_fb 0 sky130_fd_pr__res_xhigh_po_1p41 L=34.1 mult=1 m=1
+XR20 ldo_fb R2_1 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XR21 R2_1 VSS 0 sky130_fd_pr__res_xhigh_po_1p41 L=35.25 mult=1 m=1
+XCdec VSS VOUT VSS VSS sky130_fd_pr__nfet_01v8 W=20 L=20 m=15
+.ends ldo

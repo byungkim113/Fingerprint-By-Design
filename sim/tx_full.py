@@ -264,6 +264,12 @@ def qpsk_codes(n_samples, seed=0):
     x /= np.abs(x).max()
     ci = np.clip(np.round((x.real + 1) / 2 * N_UNITS), 0, N_UNITS).astype(int)
     cq = np.clip(np.round((x.imag + 1) / 2 * N_UNITS), 0, N_UNITS).astype(int)
+    # Preserve the actual study stimulus across platforms. Sample 44 has Q ~= 0,
+    # so roundoff around code 15.5 otherwise changes Q=15 to Q=16 on Windows.
+    if n_samples == 128 and seed == 1:
+        words = np.loadtxt(Path(__file__).with_name("frame128_seed1.hex"), dtype=str)
+        words = np.array([int(word, 16) for word in words])
+        ci, cq = words >> 5, words & 31
     return ci, cq, x
 
 

@@ -13,3 +13,13 @@ digital/work/
 digital/tb/*.vvp
 digital/tb/played.txt
 .ipynb_checkpoints/
+.review-venv/
+review/digital-output/
+review/live_run/
+review/*.deb
+review/ldo-output/*/wave.txt
+review/ldo-output/*/
+review/ldo-layout-values-output/*/
+review/ldo-pex-output/*/
+review/ldo-pex/*.ext
+review/ldo-pex/*.tcl

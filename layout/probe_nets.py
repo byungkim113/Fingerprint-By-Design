@@ -33,7 +33,15 @@ pts = {"LDO VSS track TOP0 (m3)": ("m3", 61.0, -254.52, "VSS"),
        "out_net VSS (m3)": ("m3", 215.5, -36.0, "VSS"),
        "bias VSS (m3)": ("m3", 85.0, -24.3, "VSS")}
 print("VSS spine net:", spine, "  core VDD run net:", vdd)
+if spine is None or vdd is None or spine == vdd:
+    raise RuntimeError("VSS and VDD probes must find two distinct metal nets")
+failures = []
 for k, (l, x, y, want) in pts.items():
     n = net(l, x, y)
     got = "VSS" if n == spine else ("VDD" if n == vdd else f"other({n})")
-    print(f"{k:<26} -> {got:<12} expected {want}  {'OK' if (got == want or (want == 'VIN' and got.startswith('other'))) else 'MISMATCH'}")
+    ok = n is not None and (got == want or (want == 'VIN' and n not in (spine, vdd)))
+    print(f"{k:<26} -> {got:<12} expected {want}  {'OK' if ok else 'MISMATCH'}")
+    if not ok:
+        failures.append(k)
+if failures:
+    raise RuntimeError("metal connectivity probes failed: " + ", ".join(failures))

@@ -1,5 +1,13 @@
 # Fingerprint-by-Design — ISSCC 2027 Code-a-Chip submission
 
+> **2026-10-24 verification correction:** Fresh strict Netgen checks find device-property errors in the
+> committed analog GDS despite matching connectivity. The LDO soft-start capacitor is 30x30 um in GDS,
+> not the specified 70x70 um. Fresh capacitance-extracted startup simulations peak at 2.13-2.38 V across
+> six tested -40/27/85C, 1/50 us ramp cases (VIN to 3.63 V, 313-ohm load), exceeding the project's
+> 1.95 V criterion. Earlier LVS/startup signoff claims below are superseded by this correction.
+> The notebook runs (13 cells/11 plots), digital RTL and routed tests pass, and analog DRC is clean
+> in Magic and KLayout. See `review/REVIEW.md` for evidence, fixes, and remaining limitations.
+
 Goal: transistor-level (SKY130, ngspice) study of where a transmitter's RF
 fingerprint originates, why it drifts with temperature, and which block gives
 a fingerprint that is both unique and temperature-stable.

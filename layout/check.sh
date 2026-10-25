@@ -14,7 +14,7 @@ mkdir -p "$work"
 cd "$work"
 
 cat > run.tcl <<EOF
-gds read $here/$cell.gds
+gds read {$here/$cell.gds}
 load $cell
 select top cell
 drc style drc(full)
@@ -31,11 +31,16 @@ quit -noprompt
 EOF
 "$MAGIC" -dnull -noconsole -rcfile "$rc" run.tcl > magic.log 2>&1
 grep -E "^DRC(ERR|TOTAL)" magic.log
+status=0
+grep -q '^DRCTOTAL: 0$' magic.log || status=1
 
-"$NETGEN" -batch lvs "${cell}_ext.spice $cell" "$here/$cell.spice $cell" "$setup" lvs.rpt > netgen.log 2>&1 || true
-if grep -q "Circuits match uniquely" lvs.rpt && ! grep -q "failed pin matching" lvs.rpt; then
+python3 "$here/prepare_lvs.py" "$here/$cell.spice" "$work/reference.spice" "$PDK_ROOT"
+"$NETGEN" -batch lvs "${cell}_ext.spice $cell" "reference.spice $cell" "$setup" lvs.rpt > netgen.log 2>&1 || true
+if grep -q "Circuits match uniquely" lvs.rpt && ! grep -qiE "failed pin matching|property errors|do not match" lvs.rpt; then
   echo "LVS: MATCH ($(grep -m1 'Number of devices' lvs.rpt | sed 's/  */ /g'))"
 else
+  status=1
   echo "LVS: MISMATCH (see $work/lvs.rpt)"
   grep -E "Circuit [12] contains|Final result|Mismatch" lvs.rpt | head -8
 fi
+exit "$status"

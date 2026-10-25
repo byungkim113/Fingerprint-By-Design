@@ -7,6 +7,7 @@
 `timescale 1ns/1ps
 `default_nettype none
 module tb;
+    parameter SPI_HALF_NS = 200;
     reg clk = 0, rst_n = 0, sck = 0, csb = 1, mosi = 0;
     wire miso, running;
     wire [30:0] di, dbi, dq, dbq;
@@ -23,11 +24,11 @@ module tb;
     task spi(input [31:0] tx, output [31:0] r);   // mode 0, 2.5 MHz
         integer b;
         begin
-            csb = 0; #200;
+            csb = 0; #(SPI_HALF_NS);
             for (b = 31; b >= 0; b = b - 1) begin
-                mosi = tx[b]; #200; sck = 1; r = {r[30:0], miso}; #200; sck = 0;
+                mosi = tx[b]; #(SPI_HALF_NS); sck = 1; r = {r[30:0], miso}; #(SPI_HALF_NS); sck = 0;
             end
-            #200 csb = 1; #400;
+            #(SPI_HALF_NS) csb = 1; #400;
         end
     endtask
     task wr(input [7:0] a, input [15:0] v); begin spi({1'b1, 7'd0, a, v}, rx); end endtask
@@ -110,8 +111,9 @@ module tb;
         rd(8'h80, d); checks = checks + 1; if (d !== 16'h0001) fail("CTRL read");
 
         $display("%0d checks, %0d errors: %0s", checks, errors, errors ? "FAIL" : "PASS");
+        if (errors) $fatal(1, "front-end checks failed");
         $finish;
     end
-    initial begin #20_000_000 $display("TIMEOUT"); $finish; end
+    initial begin #20_000_000 $fatal(1, "TIMEOUT"); end
 endmodule
 `default_nettype wire

@@ -52,10 +52,10 @@ makes it stable. We also report what did **not** work.
 md(r"""
 ## Results at a glance
 
-| Question | Answer (transistor-level simulation of the laid-out design) |
+| Question | Answer (transistor-level simulations; see the layout verification correction in Section 1) |
 |---|---|
-| Can chips of one identical design be told apart? | **Yes.** 16 chips: 100% at 30 dB SNR; 64 chips: still 100% at 30 dB. Impostor chips of the same design are rejected with 0% equal error rate. |
-| Where does the fingerprint come from? | Mismatch in the **DACs and mixers**, then **amplified about 7x by the power amplifier (PA)**, plus the PA's own mismatch. The output buffer adds nothing; LO quadrature errors add almost nothing. |
+| Can chips of one identical design be told apart? | **Yes.** 16 chips: 100% at 30 dB SNR; 64 chips: still 100% at 30 dB. Same-design impostor equal error rate is 0% at 30 dB and 7.37% at 20 dB. |
+| Where does the fingerprint come from? | Mismatch in the **DACs and mixers**, then about **7.24x greater chip-specific energy after the power amplifier (PA)**, including the PA's own mismatch. The output buffer adds very little; LO quadrature errors add almost nothing. |
 | Can a design choice change it? | **Yes.** A more linear PA shrinks the fingerprint to 0.62x. Bigger DAC transistors halve the mismatch at the mixer but barely change the final fingerprint, because the PA dominates. |
 | Does it survive the layout? | **Yes.** After parasitic extraction the fingerprint is 0.99x its schematic size. |
 | What breaks it? | **Not temperature, but supply voltage.** A 10% drop in supply voltage collapses identification from 100% to 34%. Cold plus low supply: 7%. |
@@ -118,7 +118,12 @@ SOURCES = [("https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io.git", "m
            ("https://github.com/byungkim113/sscs-ose-code-a-chip.github.io.git", "isscc27-fingerprint-by-design", SUB),
            ("https://github.com/byungkim113/Code-A-Chip.git", "main", "notebook")]
 HERE = os.path.abspath(".")
-if not os.path.isdir(os.path.join(HERE, "data")):
+# A project-root launch also has data/, but that folder holds the older block studies.
+for candidate in (HERE, os.path.join(HERE, "notebook")):
+    if os.path.isfile(os.path.join(candidate, "data", "live_reference.json")):
+        HERE = candidate
+        break
+if not os.path.isfile(os.path.join(HERE, "data", "live_reference.json")):
     for i, (url, branch, sub) in enumerate(SOURCES):
         dest = os.path.abspath(f"fbd_src{i}")
         if not os.path.isdir(dest):
@@ -169,7 +174,7 @@ RF signal:
 |---|---|
 | Size | 509 x 378 um (core + LDO) |
 | DRC | 0 errors in Magic **and** in the official KLayout deck |
-| LVS | Netgen match, 300 devices |
+| LVS | Connectivity matches, 300 devices; strict device-property checks fail (see correction below) |
 | Parasitic extraction | Magic, 472 devices + 1,930 parasitic capacitors; post-layout EVM 13.8% vs 14.2% in the schematic |
 | Power nets | a met5 ground spine and a metal-only connectivity check (LVS alone cannot see a ground tie missing, because the substrate already joins grounds) |
 
@@ -182,6 +187,20 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
 * **The regulator needs its own start-up protection.** Without it the LDO output briefly followed the 3.3 V input on
   power-up (up to 3.0 V on 1.8 V transistors). A start-up guard and a soft-start keep it below 1.95 V for all ramps and
   temperatures we tested.
+
+**Verification correction (2026-10-24 review).** A fresh strict
+LVS run finds matching connectivity (300 devices) **with device-property errors**, so the analog layout is not fully
+LVS-clean. The soft-start capacitor is physically 30 x 30 um but specified as 70 x 70 um; three coupling capacitors
+extract as 30 x 30 rather than 31 x 31 um, and two resistor dimensions also differ. The former check script ignored
+Netgen's property-error message; it now fails correctly. Consequently, the schematic startup results do not establish
+the startup behavior of this GDS. A new zero-volt startup sweep also finds failed or non-starting simulations at 85 C.
+These issues must be resolved before circuit signoff; the archived fingerprint results remain simulation results.
+Replacing only the soft-start capacitor in the schematic bench with the extracted 30 x 30 um value produces
+2.15-2.33 V startup peaks at -40/27 C for 1/50 us ramps to 3.63 V (313 ohm load), above the project's 1.95 V criterion.
+This sensitivity test uses the measured capacitor value; it is not a full parasitic-extracted startup simulation.
+A separate fresh capacitance-extracted LDO simulation confirms peaks of 2.13-2.38 V across all six tested combinations
+of -40/27/85 C and 1/50 us ramps under the same VIN/load conditions. Those transients complete and regulate afterward,
+but every startup peak exceeds the criterion.
 
 The layout file itself is in `gds/tx_core.gds.gz`. The cell below reads it and draws the main layers, so you can check
 the layout without installing any EDA tool (open it in KLayout for full detail).
@@ -360,13 +379,17 @@ ax[1].legend(fontsize=8, loc="upper right"); plt.tight_layout(); plt.show()
 print(f"design curve (nominal): {rms(fp['nominal']):.1e} rms;  shift shared by both chips: "
       f"{rms((fp['1'] + fp['2']) / 2 - fp['nominal']):.1e};  chip 1 vs chip 2: {rms(d12):.1e}")
 for snr in (30, 20):
-    print(f"at {snr} dB the two chips are {np.sqrt(np.sum((d12 / sd[snr]) ** 2)):.0f} noise units apart "
+    print(f"at {snr} dB the diagonal noise-scaled distance is {np.sqrt(np.sum((d12 / sd[snr]) ** 2)):.0f} "
           f"(over all {len(d12)} numbers)")
 if RUN_LIVE:
     nom_diff = np.max(np.abs(fp["nominal"] - ladder(baseband(ref)["nominal"], ci, cq)))
     r12 = rms(ladder(baseband(ref)["1"], ci, cq) - ladder(baseband(ref)["2"], ci, cq))
     print(f"check against our run: nominal chip differs by {nom_diff:.1e} (should be ~0); chip-to-chip difference "
           f"{rms(d12):.1e} vs ours {r12:.1e} (same size expected; identical only on macOS)")
+    if not np.isfinite(nom_diff) or nom_diff > 1e-5:
+        raise AssertionError("nominal simulation does not match the reference; inspect live_run/*.log")
+    if not np.all(np.isfinite(d12)) or rms(d12) <= 1e-6:
+        raise AssertionError("live simulation did not produce distinct, finite chip fingerprints")
 """)
 md(r"""
 **What this shows.** The left plot is dominated by the **design's own curve**: the PA's compression, and the way each
@@ -376,13 +399,14 @@ simulations), and the mismatch-free simulation predicts it. Two things are left 
 * Both chips sit away from the nominal curve by roughly the same amount and in the same direction. Mismatch shifts the
   *average* chip, so the mismatch-free simulation does not predict the average chip exactly. This shared part cannot tell
   chips apart.
-* What does tell them apart (right plot) is small, up to about 1.5% of full scale per code (0.7% rms), and with a good
-  link it is clearly above the noise in one received burst: summed over all 88 numbers the two chips are about 26 noise
-  units apart at 30 dB, and about 8 at 20 dB. This is why identification is perfect at 30 dB and starts to fail around 20 dB in
-  Result 1.
+* What does tell them apart (right plot) is small, up to about 1.6% of full scale in the displayed I-real component
+  (0.7% rms over all 88 features). Scaling each feature difference by its noise standard deviation gives a combined
+  diagonal distance of about 26 at 30 dB and 8 at 20 dB. The features are correlated, so this illustrative distance is
+  not a count of independent noise units or a significance level. Identification performance is measured separately
+  in Result 1.
 
-That chip-to-chip difference is the fingerprint. It comes only from transistor mismatch, which is what the PDK's Monte
-Carlo models provide, and it is also why the receiver compares chips with each other's enrolled templates rather than
+That chip-to-chip difference is the fingerprint. It comes from device mismatch in the PDK's Monte Carlo models,
+including transistors and passives, and it is also why the receiver compares chips with each other's enrolled templates rather than
 with the nominal design. The rest of the notebook asks where the fingerprint comes from, how a designer can change it,
 and what makes it drift.
 """)
@@ -413,8 +437,9 @@ plt.tight_layout(); plt.show()
 """)
 md(r"""
 **What this shows.** With a good link (30 dB) every chip is identified correctly, even among 64 chips of the same design,
-and impostors are rejected perfectly. With a weak link (20 dB) accuracy drops to 91% for 64 chips, and below 15 dB the
-fingerprint is buried in noise. The fingerprint is real and usable, but it is small: it needs a decent SNR.
+and the measured impostor EER is 0%. At 20 dB, accuracy drops to 91% for 64 chips and impostor EER rises to 7.37%.
+At 10 dB, identification is only 18-35% across these population sizes. The fingerprint is real and usable, but it is
+small: it needs a decent SNR.
 """)
 
 # ---------------------------------------------------------------- result 2
@@ -430,20 +455,27 @@ at = load("tx_attrib_aligned")["27"]["increments"]; sp = load("tx_split")["split
 parts = {"DAC unit currents": at["DAC unit currents"], "LO I/Q imbalance": at["LO imbalance"],
          "switches, quads, load": at["switches/quads/load"], "PA": sp["PA increment"], "output buffer": sp["buffer increment"]}
 fig, ax = plt.subplots(1, 2, figsize=(11, 3.4), gridspec_kw={"width_ratios": [1.6, 1]})
-ax[0].barh(list(parts)[::-1], [100 * max(v, 0) for v in list(parts.values())[::-1]],
+ax[0].barh(list(parts)[::-1], [100 * v for v in list(parts.values())[::-1]],
            color=[C["bad"] if k == "PA" else C["grey"] for k in list(parts)[::-1]])
-for i, v in enumerate(list(parts.values())[::-1]): ax[0].text(100 * max(v, 0) + 1, i, f"{max(100 * v, 0):.0f}%", va="center")
-ax[0].set(xlabel="share of the chip-specific RF fingerprint explained (%)", title="Which block adds the fingerprint (27 C)", xlim=(0, 100))
+for i, v in enumerate(list(parts.values())[::-1]):
+    ax[0].text(100 * v + (1 if v >= 0 else -0.5), i, f"{100 * v:.1f}", va="center", ha="left" if v >= 0 else "right")
+ax[0].axvline(0, color="k", lw=0.6)
+ax[0].set(xlabel="increment in prediction R-squared (percentage points)", title="Stage-wise prediction increments (27 C)", xlim=(-5, 100))
 ax[1].bar(["mixer output", "after PA", "after buffer"], [1, sp["energy_pa_over_mix"], sp["energy_pa_over_mix"] * sp["energy_rf_over_pa"]],
           color=[C["base"], C["bad"], C["bad"]])
 ax[1].set(ylabel="chip-specific energy (x mixer output)", title="The PA amplifies chip differences")
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** The DAC and mixer mismatch is where the fingerprint *starts*, but by the time the signal leaves
-the chip, about 80% of the chip-to-chip difference has been added by the **power amplifier**. The PA multiplies the
-chip-specific content about 7x. The output buffer is transparent, and LO quadrature errors contribute almost nothing
-because the limiters square up the LO.
+**What this shows.** The DAC and mixer mismatch is where the fingerprint *starts*. In the split-stage comparison,
+predicting RF features from mixer features gives R-squared 0.203, while using PA features gives 0.999: a **79.7-point
+increase**, with only 0.06 points left for the buffer. The left chart combines the DAC/LO/mixer attribution experiment
+with the separate PA/buffer split experiment; these increments are not an additive partition totaling 100%. It also
+retains the small negative LO increment (-0.09 points).
+
+The right chart shows **energy**, which is squared feature magnitude: the PA-to-mixer ratio is 7.24x and the final
+RF-to-mixer ratio is 7.50x. The corresponding feature-norm ratios are about 2.69x and 2.74x, not 7x amplitude gains.
+LO quadrature errors contribute almost nothing in this analysis because the limiters square up the LO.
 
 A later experiment refined this picture: the PA does not only amplify upstream mismatch, its own transistor mismatch is
 a large part of the fingerprint too (Result 3). And a sensitivity study, re-running chips with the PDK's mismatch
@@ -489,7 +521,7 @@ md(r"""
   to 0.62x, and identification at 20 dB falls from 96% to 85%. The PA is a **design lever**. Used in one direction it
   makes devices easier to authenticate; in the other it is an "anti-fingerprint" choice for privacy. It also lowered
   EVM from 11.4% to 6.1%.
-* **Big DAC: prediction failed, informatively.** Mismatch at the mixer halved exactly as Pelgrom predicts (0.54x), but
+* **Big DAC: prediction failed, informatively.** Mismatch at the mixer roughly halved, consistent with Pelgrom's scaling (0.54x), but
   the RF fingerprint only dropped to 0.85x. The PA's own mismatch dominates, so making the DAC better matched barely
   matters. We had underestimated the PA as a *source* of fingerprint, and this experiment is how we found out.
 
@@ -599,7 +631,8 @@ and put it on the chip:
 * an error amplifier and a **5 V PMOS pass device** that turn an external 3.3 V supply into the core's 1.8 V
   (+-0.4% over all temperatures and input voltages, about 1 ohm load regulation),
 * on-chip decoupling, a **soft-start** and a **start-up guard**,
-* all laid out (509 x 223 um) and LVS-matched, and the simulated netlist proven identical to the layout netlist.
+* all laid out (509 x 223 um), with matching connectivity but unresolved device-dimension errors; see the correction
+  in Section 1. The electrical results below describe the simulated design and do not establish startup signoff.
 
 ![LDO layout](images/ldo_zoom.png)
 
@@ -662,7 +695,7 @@ ax.legend(fontsize=8); plt.tight_layout(); plt.show()
 """)
 md(r"""
 With the regulator, supply drift is mostly fixed even for arbitrary data (-10%: 59% to 84%; +10%: 49% to 81%), but
-**temperature** remains the limit (85 C: about 49% with or without the regulator). The regulator also costs something
+**temperature** remains the limit (85 C: 50.6% without the regulator and 49.4% with it). The regulator also costs something
 here: at nominal conditions the model-based receiver scores 84% with the LDO against 93% without it, so this test
 failed its pre-registered gate overall. Identifying chips from arbitrary data while their temperature changes is the
 open problem this project leaves.
@@ -675,7 +708,8 @@ open problem this project leaves.
 * The receiver uses ideal downconversion; real receivers add their own impairments and frequency offset. In particular,
   measured studies on real devices find temperature hurts mostly through the **crystal oscillator's frequency drift**,
   which our design avoids by taking the LO from outside the chip.
-* The regulator's start-up peak is below the 1.95 V limit but with a thin margin for 50-200 us supply ramps.
+* Startup is not signed off: see the verification correction in Section 1 for the capacitor mismatch and zero-volt
+  startup failures at 85 C. The previously reported peak margin applies only to the original tested conditions.
 * Not yet a complete tape-out: the digital front end is a separate signed-off block, not yet wired to the analog core
   in one layout, and there are no pads or ESD protection.
 """)
@@ -684,7 +718,8 @@ open problem this project leaves.
 md(r"""
 ## 10. Lessons for circuit designers
 
-1. **The PA decides how big the fingerprint is.** It both amplifies upstream mismatch (about 7x here) and adds its own.
+1. **The PA decides how big the fingerprint is.** Chip-specific energy is about 7.24x greater after the PA, which
+   both shapes upstream mismatch and adds its own.
    Linearising the PA shrinks the fingerprint; that is an easy lever for privacy, and the reverse for authentication.
 2. **Matching the DAC better barely matters** once the PA dominates. Spend area where the fingerprint is made.
 3. **Supply, not temperature, is the drift that breaks identification** in a design like this (with an external LO).

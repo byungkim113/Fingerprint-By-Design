@@ -15,14 +15,15 @@ predict, explain and control a transmitter's fingerprint at design time, using o
 We designed and verified a transmitter in SKY130:
 
 * an analog core (I/Q current-steering DACs, Gilbert mixers, LO path, PA, output buffer, bias reference) and an on-chip
-  LDO regulator with a bandgap reference: DRC-clean in Magic and KLayout, LVS-matched, parasitic-extracted;
+  LDO regulator with a bandgap reference: DRC-clean in Magic and KLayout and parasitic-extracted, with unresolved
+  LVS device-dimension errors described below;
 * a digital front end (SPI port, 128-sample frame memory, thermometer decoders) taken through LibreLane to a routed,
   DRC/LVS-clean layout and tested at RTL and gate level.
 
 We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. Key findings:
 
 * Chips of one design are identified at 100% at 30 dB SNR (16 and 64 chips); same-design impostors are rejected.
-* The fingerprint starts as DAC/mixer mismatch and is amplified about 7x by the PA, which also adds its own; a more
+* Chip-specific fingerprint energy is 7.24x greater after the PA, which also adds its own mismatch; a more
   linear PA shrinks it to 0.62x.
 * It survives layout parasitics (0.99x).
 * Supply drift, not temperature, breaks it (-10% supply: 100% -> 34%). Design-time drift models recover most of the
@@ -30,6 +31,13 @@ We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. K
 * Open problem: identifying chips from arbitrary data under temperature drift.
 
 All tests were pre-registered; failures are reported.
+
+**Verification correction (2026-10-24):** the notebook runs successfully, but a fresh analog LVS review found
+device-property mismatches that the original check script ignored. In particular, the LDO soft-start capacitor is
+30 x 30 um in the GDS versus 70 x 70 um in the schematic. Zero-volt startup tests also fail or do not start at 85 C.
+Using the measured capacitor value produces 2.15-2.33 V startup peaks in the tested -40/27 C schematic benches.
+A fresh capacitance-extracted LDO run confirms 2.13-2.38 V peaks over six -40/27/85 C startup cases.
+See Section 1 of the notebook and `../review/REVIEW.md`; analog circuit signoff remains open.
 
 ## Contents
 
@@ -41,6 +49,7 @@ All tests were pre-registered; failures are reported.
 | `images/` | Layout renders and explanatory diagrams |
 | `setup_tools.sh` | Installs the pinned SKY130 PDK and builds ngspice 47 for the live demo (Linux / Colab) |
 | `sim/` | The six project scripts the live demo needs (netlist generator and helpers), copied unchanged |
+| `sim/frame128_seed1.hex` | The exact main-study stimulus, avoiding a platform-dependent rounding difference |
 | `LICENSE` | Apache License 2.0 |
 
 ## Running

@@ -5,7 +5,11 @@ set -euo pipefail
 cell=$1
 here=$(cd "$(dirname "$0")" && pwd)
 PDK_ROOT=${PDK_ROOT:-$HOME/.volare}
-KLAYOUT=${KLAYOUT:-/Applications/KLayout/klayout.app/Contents/MacOS/klayout}
+if command -v klayout >/dev/null; then
+  KLAYOUT=${KLAYOUT:-klayout}
+else
+  KLAYOUT=${KLAYOUT:-/Applications/KLayout/klayout.app/Contents/MacOS/klayout}
+fi
 mkdir -p "$here/work/$cell"
 rpt=$here/work/$cell/klayout_drc.lyrdb
 "$KLAYOUT" -b -r "$PDK_ROOT/sky130A/libs.tech/klayout/drc/sky130A_mr.drc" \
@@ -19,4 +23,5 @@ cnt = Counter(it.findtext("category").strip("'") for it in root.iter("item"))
 print("KLAYOUT DRC total:", sum(cnt.values()))
 for k, v in cnt.most_common():
     print(f"  {v} x {k}")
+sys.exit(1 if cnt else 0)
 PY
