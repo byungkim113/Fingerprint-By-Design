@@ -248,8 +248,26 @@ def run(text, tag="tx", timeout=7200):
     return d
 
 
+def _tstop(d):
+    """longest transient stop time requested by the netlists (*.sp) in run directory d, or None."""
+    import re
+    stops = [float(m.group(1)) for sp in Path(d).glob("*.sp")
+             for m in re.finditer(r"^\s*tran\s+\S+\s+(\S+)", sp.read_text(errors="replace"), re.M)]
+    return max(stops) if stops else None
+
+
 def load_wr(path, names=("rfp", "rfn", "outp", "outn", "lo_i", "lo_q")):
+    """read an ngspice wrdata file; refuses missing, empty or truncated waveforms (a waveform must reach the
+    transient stop time of the netlist that produced it, read from the *.sp files in the same directory)."""
+    path = Path(path)
+    if not path.exists() or path.stat().st_size == 0:
+        raise ValueError(f"{path}: waveform missing or empty")
     a = np.loadtxt(path)
+    if a.ndim != 2 or len(a) < 2:
+        raise ValueError(f"{path}: waveform has no data rows")
+    tstop = _tstop(path.parent)
+    if tstop is not None and a[-1, 0] < tstop * 0.9999:
+        raise ValueError(f"{path}: waveform ends at {a[-1, 0]:.4g} s but the simulation asked for {tstop:.4g} s")
     return a[:, 0], {n: a[:, 2 * i + 1] for i, n in enumerate(names)}
 
 

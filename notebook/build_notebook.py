@@ -783,7 +783,7 @@ every pre-registration, result, bug and correction in order.
 | Magic | 8.3.684 | layout, DRC, extraction, device generation |
 | Netgen | 1.5.324 | LVS |
 | KLayout | 0.30.12, with the PDK's `sky130A_mr.drc` deck | second DRC, metal connectivity check |
-| gLayout / gdsfactory / gdstk | 0.2.0 / 7.7.0 / 0.9.62 (1.0.2 in the notebook) | layout generation, reading the GDS |
+| gLayout / gdsfactory / gdstk | 0.2.0 / 7.7.0 / 0.9.62 (1.0.2 in the notebook), in a separate Python 3.11 environment (the pinned layout packages fail to install on 3.12) | layout generation, reading the GDS |
 | LibreLane | 3.0.16 (container image, with its pinned PDK `8afc8346a57fe1ab7934ba5a6056ea8b43078e71`: Yosys 0.62, OpenROAD 2026-02-17, Magic 8.3.623, Netgen 1.5.316, Icarus Verilog 13.0-devel) | digital front end |
 | Python | 3.12.14 with numpy 2.5.3, scipy 1.18.1, scikit-learn 1.9.1, matplotlib 3.11.2 | analysis and this notebook |
 

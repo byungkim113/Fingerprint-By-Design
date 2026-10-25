@@ -22,22 +22,25 @@ We designed and verified a transmitter in SKY130:
 
 We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. Key findings:
 
-* Chips of one design are identified at 100% at 30 dB SNR (16 and 64 chips); same-design impostors are rejected.
+* Chips of one design are identified at 100% at 30 dB SNR per sample (16 and 64 chips) when each decision averages an
+  18-frame, 92 us burst of a known 128-sample frame; from a single frame, 89% (16 chips) and 73% (64 chips).
+  Same-design impostors: 0% equal error rate at 30 dB, 7.4% at 20 dB.
 * Chip-specific fingerprint energy is 7.24x greater after the PA, which also adds its own mismatch; a more
   linear PA shrinks it to 0.62x.
 * It survives layout parasitics (0.99x).
-* Supply drift, more than temperature, breaks it in this setup (external LO, known frame; -10% supply: 100% -> 34%). Design-time drift models recover most of the
-  loss; an **on-chip LDO keeps identification at 100% across +-10% supply**.
+* Supply drift, more than temperature, breaks it in this setup (external LO, known repeated frame, simulated devices;
+  -10% supply: 100% -> 34%). Design-time drift models recover most of the loss; an **on-chip LDO keeps identification at 100% across +-10% supply**.
 * Open problem: identifying chips from arbitrary data under temperature drift.
 
-All tests were pre-registered; failures are reported.
+The main tests were pre-registered (prediction and pass rule written down before running) and failures are reported;
+analyses chosen after seeing data are labelled post hoc or exploratory in the notebook.
 
 **Verification correction (found 2026-10-24, fixed 2026-10-25):** an independent review found that the original LVS
 check ignored Netgen's device-property errors. Six devices were drawn at different sizes from the design; the most
 important was the LDO soft-start capacitor (30 x 30 um instead of 70 x 70 um, because Magic's generator silently caps a
 plate at 30 um), which made the extracted regulator overshoot to 2.13-2.38 V at power-up. The layout was corrected
 (3 x 2 capacitor array, lengthened resistors, coupling capacitors set to the drawn 30 um) and now passes strict LVS; the
-extracted regulator peaks at 1.80-1.93 V over -40/27/85 C and 1-200 us ramps (limit 1.95 V). Section 1 of the
+extracted regulator peaks at 1.80-1.93 V over -40/27/85 C and 1-200 us ramps (limit 1.95 V). Appendix A of the
 notebook gives the details.
 
 ## Contents

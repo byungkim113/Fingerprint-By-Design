@@ -32,12 +32,12 @@ notebook, Section 2 and Result 1, for the protocol and the accuracy with shorter
 ## Running
 
 Tools: SKY130 PDK `c6d73a35f524070e85faff4a6a9eef49553ebc2b` (volare 0.20.6), ngspice 47, Magic 8.3.684,
-Netgen 1.5.324, KLayout 0.30.12, Python 3.12. The notebook's Section 11 lists every version.
+Netgen 1.5.324, KLayout 0.30.12, Python 3.12 (analysis) and 3.11 (layout). The notebook's Section 11 lists every version.
 
 ```bash
-python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt          # simulation, analysis, notebook
-python3.12 -m venv .venv-layout && .venv-layout/bin/pip install -r requirements-layout.txt   # gLayout / gdsfactory
-volare enable --pdk sky130 c6d73a35f524070e85faff4a6a9eef49553ebc2b             # PDK into ~/.volare
+python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt          # simulation, analysis, notebook (Python 3.12)
+python3.11 -m venv .venv-layout && .venv-layout/bin/pip install -r requirements-layout.txt   # gLayout / gdsfactory (Python 3.11: the pinned layout packages do not install on 3.12)
+.venv/bin/volare enable --pdk sky130 c6d73a35f524070e85faff4a6a9eef49553ebc2b   # PDK into ~/.volare (volare is in requirements.txt)
 ```
 
 **Notebook** (replots saved results in seconds; Section 2b can run a live transistor-level demo on Linux or Colab):

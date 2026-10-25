@@ -1117,3 +1117,17 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
     to RF-PUF [1]; "supply, not temperature" qualified (external LO, known repeated frame, simulated devices).
   4 Correction history moved to notebook Appendix A (short note kept in Section 1). 5 Root README.md added.
   Notebook: 42 cells, 0 errors, 12 figures. Digital run_tests.sh (default: committed netlist): PASS.
+- 2026-10-25: THIRD REVIEW (of e37a841), five items:
+  1 EMPTY ARCHIVED WAVEFORMS: 30 zero-byte files dated 2026-10-07 (iCloud placeholders copied during the storage
+    incident): ident_tt_mm_T85 11, ident_palin_tt_mm_T-40 6, ident_bigdac_tt_mm_T85 2, pex_tt_mm_T-40 11. The real
+    files were in ~/Desktop/code-a-chip-rffp_OLD_icloud/sim/work_icloud_leftover (iCloud "dataless", downloadable);
+    restored by copy + byte compare (30/30). Scan of all 1,072 study waveforms: 0 empty or incomplete. Reanalysis:
+    tx_ident analyze 30 and 20 dB, tx_more_tests pex, tx_variant_mc analyze 3 -> result files byte-identical to the
+    archived ones. (My earlier "real study waveforms pass" was based on two files only - corrected.) The SSD backup
+    tar was made after the incident and probably holds the empty files too: needs refreshing.
+  2 tx_full.load_wr refuses missing/empty files and waveforms ending before the tran stop of the *.sp netlists in the
+    same directory (covers every analysis loader; tested truncated + empty -> refused, real -> accepted).
+  3 review/audit_notebook_graphs.py identifies figures by title, checks the burst-length figure (and that 18 frames
+    equals the headline), requires all 10 data figures + 2 layout figures: PASS, 28 comparisons.
+  4 README: layout venv needs Python 3.11 (pinned layout packages fail to install on 3.12, checked); volare from the
+    venv. 5 Submission README: 18-frame qualification, single-frame numbers, "main tests" pre-registered.
