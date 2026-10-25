@@ -31,9 +31,12 @@ chips made from the **same design** send slightly different signals for the same
 differences and recognise which physical chip sent a signal. This is called an **RF fingerprint**, and it is used to
 authenticate IoT devices, to spot counterfeit hardware, and, from the other side, it is a privacy concern.
 
-Today, RF fingerprints are almost always studied **after** the chips are built: people record real devices and train a
+Most RF-fingerprinting work studies devices **after** they are built: people record real devices and train a
 classifier on whatever differences happen to be there. If the fingerprint drifts when the battery runs down or the
-device warms up, they find out in the field.
+device warms up, they find out in the field. Design-time studies exist: RF-PUF [1], for example, used simulated process
+variation in transmitter circuits to show that a receiver can learn device-specific signatures. What has been missing
+is an open, reproducible way for a designer to take one transmitter from schematic to verified layout and ask, with
+transistor-level Monte Carlo, where its fingerprint comes from, which design choices move it, and what makes it drift.
 
 This notebook asks a different question:
 
@@ -44,27 +47,32 @@ To answer it we designed a complete transmitter core in the open-source **SkyWat
 (DRC, LVS, parasitic extraction), and then simulated hundreds of "virtual chips" of that one design, each with its own
 random transistor mismatch from the PDK's Monte Carlo models. A software receiver then tries to tell the chips apart.
 
-Along the way we found out where the fingerprint comes from, which design choices make it larger or smaller, what
-actually breaks it (it is not what we expected), and how a standard circuit block, an **on-chip voltage regulator**,
-makes it stable. We also report what did **not** work.
+What is new here is that combination, all with open tools: a stage-by-stage trace of where the fingerprint is
+created, controlled design experiments that move it (PA linearity, DAC sizing, an on-chip regulator), drift tests
+across supply and temperature, and tests whose predictions were written down before they ran. Along the way we found
+what actually breaks the fingerprint in this setup (it is not what we expected) and how a standard circuit block, an
+**on-chip voltage regulator**, makes it stable. We also report what did **not** work.
 """)
 
 md(r"""
 ## Results at a glance
 
-| Question | Answer (transistor-level simulations; see the layout verification correction in Section 1) |
+| Question | Answer (transistor-level simulations of the laid-out design; known 128-sample frame, see Section 2) |
 |---|---|
-| Can chips of one identical design be told apart? | **Yes.** 16 chips: 100% at 30 dB SNR; 64 chips: still 100% at 30 dB. Same-design impostor equal error rate is 0% at 30 dB and 7.37% at 20 dB. |
+| Can chips of one identical design be told apart? | **Yes, with a 92 us burst** (18 repetitions of the frame, averaged). 16 chips: 100% at 30 dB SNR; 64 chips: still 100% at 30 dB. Same-design impostor equal error rate is 0% at 30 dB and 7.37% at 20 dB. From a single 128-sample frame: 89% (16 chips) and 73% (64 chips) at 30 dB. |
 | Where does the fingerprint come from? | Mismatch in the **DACs and mixers**, then about **7.24x greater chip-specific energy after the power amplifier (PA)**, including the PA's own mismatch. The output buffer adds very little; LO quadrature errors add almost nothing. |
 | Can a design choice change it? | **Yes.** A more linear PA shrinks the fingerprint to 0.62x. Bigger DAC transistors halve the mismatch at the mixer but barely change the final fingerprint, because the PA dominates. |
 | Does it survive the layout? | **Yes.** After parasitic extraction the fingerprint is 0.99x its schematic size. |
-| What breaks it? | **Not temperature, but supply voltage.** A 10% drop in supply voltage collapses identification from 100% to 34%. Cold plus low supply: 7%. |
+| What breaks it? | **Supply voltage more than temperature**, in this setup (external LO, known repeated frame, simulated devices). A 10% drop in supply voltage collapses identification from 100% to 34%. Cold plus low supply: 7%. |
 | Can design-time knowledge fix that? | **Mostly.** A drift model learned only from simulations of *other* chips at *wrong* process corners restores 100% at 30 dB across +-10% supply on chips it has never seen (it passed our strict pre-registered rule on 2 of 3 chip sets), and recovers 92% of the loss under combined temperature and supply drift. |
 | Can a design change fix it at the source? | **Yes.** We added an on-chip LDO regulator (bandgap reference + 5 V pass device). With it, identification stays at **100% across the whole +-10% supply range** and at 88-94% under combined temperature and supply drift. |
 | What is still open? | Fingerprints work on a **known sequence** (like a packet preamble). Identifying chips from **arbitrary data** works at room conditions (93%) but not under temperature drift, even with the regulator. |
 
-Every test was **pre-registered**: the prediction and the pass/fail rule were written into the project log *before* the
-simulations ran. Several predictions failed, and we report them as failures.
+The main tests were **pre-registered**: the prediction and the pass/fail rule were written into the project log
+*before* the simulations ran. Several predictions failed, and we report them as failures. Analyses chosen after seeing
+data are labelled **post hoc** or **exploratory** where they appear (for example the 70/30 split of the mismatch in
+Result 2, drift model B v2 on the first chip set, the burst-length analysis in Result 1, and the extra regulator
+start-up ramps).
 """)
 
 md(r"""
@@ -82,7 +90,7 @@ md(r"""
 7. **Result 5, drift**: what breaks it, and can design-time models compensate?
 8. **Result 6, the regulator**: fixing drift at the source with an on-chip LDO.
 9. **What did not work**: arbitrary data, and where receiver-side fixes stop.
-10. **Lessons for designers**, reproducibility, conclusion and future work.
+10. **Lessons for designers**, reproducibility, conclusion and future work; **Appendix A**, the layout verification correction.
 
 ### How to run this notebook
 
@@ -189,22 +197,9 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
   1.95 V in every case we tested: -40, 27 and 85 C with 1, 10, 50 and 200 us supply ramps to 3.63 V (worst case
   1.933 V at 85 C with a 50 us ramp, so the margin is thin).
 
-**Verification correction (found in review, 2026-10-24; fixed 2026-10-25).** An independent review of this project
-found that our layout check had passed a layout whose device sizes did not all match the design: Netgen reported
-"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Six devices differed:
-
-| Device | Designed | Drawn | Cause | Fix |
-|---|---|---|---|---|
-| LDO soft-start capacitor | 70 x 70 um | 30 x 30 um | Magic's capacitor generator silently caps a plate at 30 um | 3 x 2 array of 28.6 um plates (4,908 um2) |
-| PA and LO coupling capacitors (3) | 31 x 31 um | 30 x 30 um | same | design changed to the drawn 30 um (simulated effect: chip EVM 14.26% -> 14.22%, chip-to-chip fingerprint -0.8%) |
-| Limiter feedback resistors (2) | 141 um | 139.4 um | the bends of a folded resistor are not full length | segments lengthened; now 141.0 um |
-| Bias n-diffusion resistor | 80 um | 78.3 um | same | segments lengthened; now 79.98 um |
-
-The small soft-start capacitor mattered: with it, the extracted regulator overshot to 2.13-2.38 V at power-up. After the
-fix the layout passes strict LVS, including device sizes (a deliberately wrong capacitor size in the reference now
-fails the check, as it should), and the extracted regulator meets the 1.95 V limit in all cases above. The LDO layout
-also matches the exact netlist used in the simulations. The fingerprint results are unaffected: they were simulated
-with the designed values, and the post-layout fingerprint check already used the drawn 30 um capacitors.
+**Correction.** An independent review found that our first LVS check had passed six devices drawn at the wrong
+size, including the regulator's soft-start capacitor (30 x 30 um instead of 70 x 70 um). They were fixed, and the
+numbers above are for the corrected layout; Appendix A gives the details.
 
 The layout file itself is in `gds/tx_core.gds.gz`. The cell below reads it and draws the main layers, so you can check
 the layout without installing any EDA tool (open it in KLayout for full detail).
@@ -291,13 +286,20 @@ receiver downconverts the RF, estimates the output level for every DAC code, and
 levels from a straight line: a set of numbers that differ from chip to chip. That is the **fingerprint**.
 
 **Noise and identification.** We add receiver noise at a chosen signal-to-noise ratio (SNR), *enroll* every chip at room
-temperature and nominal supply (40 noisy bursts each), and then ask which enrolled chip a new burst came from. The
-classifier is a simple nearest-template rule that accounts for the noise statistics. Most results are shown at 30 dB
-SNR (a good link) and 20 dB (a weak one).
+temperature and nominal supply, and then ask which enrolled chip a new burst came from. The classifier is a simple
+nearest-template rule that accounts for the noise statistics. Most results are shown at 30 dB SNR (a good link) and
+20 dB (a weak one).
 
-**Keeping ourselves honest.** Before every experiment we wrote down, in the project log, what we expected and the exact
-rule that would count as a pass. When a test failed we reported it, and when we changed an analysis after seeing data
-we said so and re-tested on new chips. This matters because with simulations it is easy to keep tweaking until
+**What one decision uses.** A *burst* is **18 back-to-back repetitions of the 128-sample frame: 2,304 samples, or
+92 us** at 25 MS/s. Each chip is enrolled from 40 bursts, and every identification decision is made from **one** new
+burst (10 test bursts per chip, 3 independent noise seeds). SNR is quoted per received sample; averaging the 18
+repetitions improves the SNR of the measured fingerprint by about 12.6 dB. All accuracies in this notebook use this
+protocol unless stated otherwise, and Result 1 shows how accuracy falls with shorter bursts.
+
+**Keeping ourselves honest.** Before each main experiment we wrote down, in the project log, what we expected and the
+exact rule that would count as a pass. When a test failed we reported it. When we changed an analysis after seeing
+data we said so, labelled it post hoc, and where possible re-tested it on new chips; a few follow-up checks were never
+pre-registered and are labelled that way. This matters because with simulations it is easy to keep tweaking until
 something looks good.
 """)
 
@@ -444,6 +446,32 @@ md(r"""
 and the measured impostor EER is 0%. At 20 dB, accuracy drops to 91% for 64 chips and impostor EER rises to 7.37%.
 At 10 dB, identification is only 18-35% across these population sizes. The fingerprint is real and usable, but it is
 small: it needs a decent SNR.
+
+Each point rests on a finite number of decisions: 480 for 16 chips and 1,920 for 64 chips (10 test bursts per chip,
+3 noise seeds). The 95% intervals are 99.2-100% for 16 chips at 30 dB, 95.4-98.4% at 20 dB, 99.8-100% for 64 chips at
+30 dB and 89.5-92.1% at 20 dB. These intervals cover the receiver noise only: the chips themselves are one fixed set
+of Monte Carlo draws.
+
+**How much averaging does this need?** *(Post hoc: added after an independent review asked for it.)* The plot below
+reruns exactly the same analysis with 1 to 18 frames per burst; the 18-frame points reproduce the numbers above.
+""")
+code(r"""
+bl = load("tx_burst_length")["frames_per_burst"]; R = sorted(bl, key=int)
+fig, ax = plt.subplots(1, 2, figsize=(11, 3.4), sharey=True)
+for a, snr in zip(ax, ("30dB", "20dB")):
+    for n, mk in (("16", "o"), ("64", "^")):
+        a.plot([int(r) for r in R], [100 * bl[r][n][snr] for r in R], marker=mk, label=f"{n} chips")
+    a.set_xscale("log"); a.set_xticks([1, 2, 4, 9, 18], ["1", "2", "4", "9", "18"])
+    a.set(xlabel="frames averaged per decision (128 samples each)", title=f"{snr[:-2]} dB SNR per sample", ylim=(0, 105))
+    a.axvline(18, color=C["grey"], ls=":", lw=1)
+ax[0].set_ylabel("correct identification (%)"); ax[0].legend(loc="lower right")
+plt.tight_layout(); plt.show()
+""")
+md(r"""
+**What this shows.** The fingerprint is strong enough to identify chips from a single 128-sample frame only on a good
+link (89% for 16 chips at 30 dB), and the accuracy grows with averaging. A designer or receiver can trade observation
+time for reliability: at 30 dB, 4 frames (20 us) already give 99%+; at 20 dB, 18 frames are needed for 91-97%. In a
+real packet this is the length of known preamble the receiver must collect.
 """)
 
 # ---------------------------------------------------------------- result 2
@@ -570,7 +598,9 @@ Real devices do not stay at room temperature and nominal supply. We enrolled eve
 tested it at other conditions.
 
 **Temperature turned out to be a minor problem** for this design: from -40 C to 85 C identification stays at 100% at
-30 dB (and 92-98% at 20 dB). **Supply voltage is the real threat.**
+30 dB (and 92-98% at 20 dB). **Supply voltage is the real threat.** Two parts of this setup favour that result: the LO
+comes from outside the chip (in real devices, temperature hurts mostly through the on-board crystal's frequency drift,
+Section 9), and the receiver sees a known, repeated frame.
 """)
 code(r"""
 s = load("tx_supply")["30dB"]["BASE"]
@@ -727,7 +757,8 @@ md(r"""
    both shapes upstream mismatch and adds its own.
    Linearising the PA shrinks the fingerprint; that is an easy lever for privacy, and the reverse for authentication.
 2. **Matching the DAC better barely matters** once the PA dominates. Spend area where the fingerprint is made.
-3. **Supply, not temperature, is the drift that breaks identification** in a design like this (with an external LO).
+3. **Supply, more than temperature, is the drift that breaks identification** in a design like this (external LO,
+   known repeated frame).
    A regulated analog supply makes the fingerprint stable; check it in simulation before tape-out.
 4. **Block-level models can mislead.** Our early behavioural model got the fingerprint right only up to the mixer and
    made temperature look like the main problem. Transistor-level simulation of the real layout changed the conclusions.
@@ -818,6 +849,25 @@ data under temperature drift.
 ## Acknowledgements
 
 [Acknowledgements to be completed by the author.]
+
+## Appendix A: layout verification correction
+
+Found in an independent review on 2026-10-24 and fixed on 2026-10-25. An independent review of this project
+found that our layout check had passed a layout whose device sizes did not all match the design: Netgen reported
+"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Six devices differed:
+
+| Device | Designed | Drawn | Cause | Fix |
+|---|---|---|---|---|
+| LDO soft-start capacitor | 70 x 70 um | 30 x 30 um | Magic's capacitor generator silently caps a plate at 30 um | 3 x 2 array of 28.6 um plates (4,908 um2) |
+| PA and LO coupling capacitors (3) | 31 x 31 um | 30 x 30 um | same | design changed to the drawn 30 um (simulated effect: chip EVM 14.26% -> 14.22%, chip-to-chip fingerprint -0.8%) |
+| Limiter feedback resistors (2) | 141 um | 139.4 um | the bends of a folded resistor are not full length | segments lengthened; now 141.0 um |
+| Bias n-diffusion resistor | 80 um | 78.3 um | same | segments lengthened; now 79.98 um |
+
+The small soft-start capacitor mattered: with it, the extracted regulator overshot to 2.13-2.38 V at power-up. After the
+fix the layout passes strict LVS, including device sizes (a deliberately wrong capacitor size in the reference now
+fails the check, as it should), and the extracted regulator meets the 1.95 V limit in all cases above. The LDO layout
+also matches the exact netlist used in the simulations. The fingerprint results are unaffected: they were simulated
+with the designed values, and the post-layout fingerprint check already used the drawn 30 um capacitors.
 """)
 
 nb["cells"] = cells

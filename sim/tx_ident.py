@@ -71,15 +71,32 @@ def run_dir(corner, temp):
     return tx.WORK / f"ident_{tag}{v}{corner}_T{temp:g}"
 
 
+def last_time(path):
+    """time of the last row of an ngspice wrdata file (reads only the file's tail)."""
+    with open(path, "rb") as f:
+        f.seek(0, 2)
+        f.seek(max(0, f.tell() - 4096))
+        rows = f.read().decode(errors="replace").strip().splitlines()
+    return float(rows[-1].split()[0]) if rows else float("nan")
+
+
 def run_one(job):
     corner, seed0, n, temp = job
     d = run_dir(corner, temp)
     d.mkdir(parents=True, exist_ok=True)
+    for old in list(d.glob("tx_out_*")) + [d / "ngspice.log"]:   # never analyse an earlier run's waveforms
+        old.unlink(missing_ok=True)
     shutil.copy(SPINIT, d / ".spiceinit")
     (d / "c.sp").write_text(netlist(corner, seed0, n, temp))
     with open(d / "ngspice.log", "w") as log:                 # streamed: finished chips survive
-        subprocess.run(["ngspice", "-b", "c.sp"], cwd=d, stdout=log, stderr=subprocess.STDOUT,
-                       timeout=6 * 3600)
+        r = subprocess.run(["ngspice", "-b", "c.sp"], cwd=d, stdout=log, stderr=subprocess.STDOUT,
+                           timeout=6 * 3600)
+    tstop = N_SAMPLES / tx.FS
+    bad = [s for s in range(seed0, seed0 + n)
+           if not (d / f"tx_out_{s}").exists() or not last_time(d / f"tx_out_{s}") >= tstop * 0.9999]
+    if r.returncode != 0 or bad:
+        raise RuntimeError(f"{d.name}: ngspice exit {r.returncode}; missing or incomplete waveforms for chips {bad} "
+                           f"(see {d / 'ngspice.log'})")
     return corner, temp
 
 

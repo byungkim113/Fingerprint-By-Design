@@ -26,7 +26,7 @@ We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. K
 * Chip-specific fingerprint energy is 7.24x greater after the PA, which also adds its own mismatch; a more
   linear PA shrinks it to 0.62x.
 * It survives layout parasitics (0.99x).
-* Supply drift, not temperature, breaks it (-10% supply: 100% -> 34%). Design-time drift models recover most of the
+* Supply drift, more than temperature, breaks it in this setup (external LO, known frame; -10% supply: 100% -> 34%). Design-time drift models recover most of the
   loss; an **on-chip LDO keeps identification at 100% across +-10% supply**.
 * Open problem: identifying chips from arbitrary data under temperature drift.
 

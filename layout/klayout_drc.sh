@@ -12,6 +12,7 @@ else
 fi
 mkdir -p "$here/work/$cell"
 rpt=$here/work/$cell/klayout_drc.lyrdb
+rm -f "$rpt"                         # never score an earlier run's report
 "$KLAYOUT" -b -r "$PDK_ROOT/sky130A/libs.tech/klayout/drc/sky130A_mr.drc" \
   -rd input="$here/$cell.gds" -rd top_cell="$cell" -rd report="$rpt" \
   -rd feol=true -rd beol=true -rd offgrid=true > "$here/work/$cell/klayout_drc.log" 2>&1

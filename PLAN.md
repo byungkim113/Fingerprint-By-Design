@@ -1101,3 +1101,19 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   Generator inputs now tracked: layout/work/ldo_cells (gds + Magic tcl), layout/work/passives, layout/work/rccr/*.gds.
   POST-LAYOUT nominal with LDO (sim/pex_nominal_ldo.py, new layout, 30 um caps): schematic |gain| 0.0764, EVM 14.04%,
     Q/I -1.6 deg; post-layout 0.0727, 13.50%, -2.5 deg (old: 0.0763/14.23% vs 0.0748/13.82%).
+- 2026-10-25: SECOND REVIEW FOLLOW-UP (user-approved items 1-5).
+  1 FALSE-PASS FIXES: layout/check.sh deletes its outputs before running, checks Magic's and Netgen's exit codes and
+    requires a fresh lvs.rpt (forced Netgen failure with a valid old report: MISMATCH, exit 1; forced Magic failure:
+    exit 1; normal: MATCH, exit 0). klayout_drc.sh deletes the old report (a run that writes none now fails).
+    sim/tx_ident.py run_one deletes old waveforms/log, then raises unless ngspice exits 0 and every chip's waveform
+    reaches tstop (tested: failing fake ngspice and a truncated waveform both raise; real study waveforms pass).
+    Other drivers (tx_full.run, spice.run_netlist users) do not have this check yet.
+  2 BURST PROTOCOL (post hoc, sim/tx_burst_length.py -> results/tx_burst_length.json): every decision uses 18 x 128
+    samples (2,304, 92.16 us). Same analysis as tx_more_tests "more"; REPS=18 reproduces tx_more_chips.json exactly.
+    16 chips 30/20 dB: R=1 0.8875/0.2396, 2 0.9604/0.3667, 4 0.9979/0.6104, 9 1.0/0.8625, 18 1.0/0.9729.
+    64 chips: R=1 0.7323/0.0922, 2 0.9276/0.1797, 4 0.9938/0.3729, 9 0.9995/0.6849, 18 1.0/0.9089.
+    Wilson 95% (noise only, fixed chips): 16@30 99.2-100, 16@20 95.4-98.4, 64@30 99.8-100, 64@20 89.5-92.1 %.
+  3 CLAIMS: "every test pre-registered" -> "main tests", post hoc/exploratory items named; novelty restated relative
+    to RF-PUF [1]; "supply, not temperature" qualified (external LO, known repeated frame, simulated devices).
+  4 Correction history moved to notebook Appendix A (short note kept in Section 1). 5 Root README.md added.
+  Notebook: 42 cells, 0 errors, 12 figures. Digital run_tests.sh (default: committed netlist): PASS.
