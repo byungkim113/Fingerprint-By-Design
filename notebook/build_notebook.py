@@ -20,7 +20,8 @@ SPDX-License-Identifier: Apache-2.0
 
 | Name | Affiliation | IEEE Member | SSCS Member | Email |
 |---|---|---|---|---|
-| [Author name] (Leader) | [Affiliation] | [Yes/No] | [Yes/No] | [email] |
+| Byung Kim (Leader) | United States Air Force Academy | No | No | c29byung.kim@afacademy.af.edu |
+| Yucheng Wang | University of Wisconsin-Madison | No | No | ywang3574@wisc.edu |
 """)
 
 md(r"""
@@ -369,7 +370,7 @@ sd = {snr: noise_sd(snr) for snr in (30, 20)}
 d12 = fp["1"] - fp["2"]
 rms = lambda v: np.sqrt(np.mean(v ** 2))
 
-fig, ax = plt.subplots(1, 2, figsize=(11, 3.6))
+fig, ax = plt.subplots(1, 2, figsize=(11, 4.3))
 for c, col, ls in (("nominal", "k", "-"), ("1", C["base"], "--"), ("2", C["comp"], ":")):
     ax[0].plot(codes, 100 * fp[c][:n], ls, color=col, label="nominal (no mismatch)" if c == "nominal" else f"chip {c}")
 ax[0].set(xlabel="I-channel DAC code", ylabel="level error (% of full scale)", title="Level error of each code (I, real part)")
@@ -380,7 +381,8 @@ for snr, a in ((20, 0.18), (30, 0.35)):
 ax[1].plot(codes, 100 * d12[:n], "o-", ms=3, color=C["bad"], label="chip 1 minus chip 2 (noise-free)")
 ax[1].axhline(0, color="k", lw=0.6)
 ax[1].set(xlabel="I-channel DAC code", ylabel="difference (% of full scale)", title="What tells the two chips apart")
-ax[1].legend(fontsize=8, loc="upper right"); plt.tight_layout(); plt.show()
+ax[1].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.20))
+plt.tight_layout(); plt.show()
 
 print(f"design curve (nominal): {rms(fp['nominal']):.1e} rms;  shift shared by both chips: "
       f"{rms((fp['1'] + fp['2']) / 2 - fp['nominal']):.1e};  chip 1 vs chip 2: {rms(d12):.1e}")
@@ -490,7 +492,7 @@ fig, ax = plt.subplots(1, 2, figsize=(11, 3.4), gridspec_kw={"width_ratios": [1.
 ax[0].barh(list(parts)[::-1], [100 * v for v in list(parts.values())[::-1]],
            color=[C["bad"] if k == "PA" else C["grey"] for k in list(parts)[::-1]])
 for i, v in enumerate(list(parts.values())[::-1]):
-    ax[0].text(100 * v + (1 if v >= 0 else -0.5), i, f"{100 * v:.1f}", va="center", ha="left" if v >= 0 else "right")
+    ax[0].text(max(100 * v, 0) + 1, i, f"{100 * v:.1f}", va="center", ha="left")
 ax[0].axvline(0, color="k", lw=0.6)
 ax[0].set(xlabel="increment in prediction R-squared (percentage points)", title="Stage-wise prediction increments (27 C)", xlim=(-5, 100))
 ax[1].bar(["mixer output", "after PA", "after buffer"], [1, sp["energy_pa_over_mix"], sp["energy_pa_over_mix"] * sp["energy_rf_over_pa"]],
@@ -705,8 +707,8 @@ md(r"""
 
 **Fingerprints on arbitrary data.** All results above use a known sequence, like a packet preamble, which is how most
 practical RF fingerprinting works. When we enrolled chips on one data frame and tested them on different data, the
-level-based fingerprint fell to chance (8-14%): each code's measured level depends on which other codes surround it,
-because the PA compresses the combined I/Q signal.
+level-based identification accuracy fell to 8-14% (chance: 6.25% for 16 chips). Each code's measured level depends on
+which other codes surround it, because the PA compresses the combined I/Q signal.
 
 We then built a **model-based receiver** that learns how each chip turns data into a signal, and tested it with gates we
 set in advance on fresh data frames. It passed at room conditions (93% at 30 dB on data it had never seen), but under
@@ -848,7 +850,7 @@ data under temperature drift.
 
 ## Acknowledgements
 
-[Acknowledgements to be completed by the author.]
+None.
 
 ## Appendix A: layout verification correction
 

@@ -39,15 +39,17 @@ ax.set_xlim(0, 11); ax.set_ylim(0, 2.6); ax.axis("off")
 steps = [("1. Design + layout", "SKY130 transmitter,\nDRC / LVS / PEX", "#cfe2ff"),
          ("2. Virtual chips", "Monte Carlo mismatch:\nmany chips of one design", "#d7f5d0"),
          ("3. Fingerprint", "receiver measures each\nchip's DAC level pattern", "#ffd9c7"),
-         ("4. Pre-registered tests", "prediction + pass rule\nwritten before each run", "#fff1b8"),
+         ("4. Evaluate\npre-registered tests", "predictions and pass rules\nset before simulation", "#fff1b8"),
          ("5. Design change", "PA, DAC, LDO ...\nthen test again", "#eee3ff")]
 for i, (t, s, c) in enumerate(steps):
     x = 0.1 + i * 2.18
     box(ax, x, 0.55, 1.95, 1.5, "", c)
-    ax.text(x + 0.975, 1.7, t, ha="center", fontsize=9.5, weight="bold"); ax.text(x + 0.975, 1.05, s, ha="center", fontsize=8.5)
+    ax.text(x + 0.975, 1.73, t, ha="center", va="center", fontsize=9, weight="bold")
+    ax.text(x + 0.975, 1.10, s, ha="center", va="center", fontsize=8)
     if i < 4:
         arrow(ax, x + 1.95, 1.3, x + 2.18, 1.3)
-ax.annotate("", xy=(1.0, 0.5), xytext=(9.8, 0.5), arrowprops=dict(arrowstyle="->", lw=1, color="#888", connectionstyle="arc3,rad=0.25"))
+ax.plot([9.795, 9.795, 1.075], [0.52, 0.28, 0.28], color="#888", lw=1)
+ax.annotate("", xy=(1.075, 0.52), xytext=(1.075, 0.28), arrowprops=dict(arrowstyle="->", lw=1, color="#888"))
 ax.text(5.4, 0.02, "design changes go back into the loop - all before any silicon exists", ha="center", fontsize=8.5, color="#555")
 fig.savefig("images/workflow.png", dpi=150, bbox_inches="tight"); plt.close(fig)
 
