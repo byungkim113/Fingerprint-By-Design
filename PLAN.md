@@ -1146,3 +1146,4 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   Fresh backup: /Volumes/PortableSSD/rffp-backup/sim_work_waveforms_2026-10-25.tar.zst (old backup kept).
   Backup verified 2026-10-25 22:29: sim_work_waveforms_2026-10-25.tar.zst, 8.70 GB (zstd -6), zstd -t OK, 1,452 files,
   names and sizes identical to sim/work, no zero-byte files. Old 2026-10-11 backup (13.6 GB) still present.
+  Old 2026-10-11 backup deleted on user request (2026-10-25); the verified 2026-10-25 backup is the only copy.
