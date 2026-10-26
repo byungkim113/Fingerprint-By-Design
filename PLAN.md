@@ -1131,3 +1131,18 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
     equals the headline), requires all 10 data figures + 2 layout figures: PASS, 28 comparisons.
   4 README: layout venv needs Python 3.11 (pinned layout packages fail to install on 3.12, checked); volare from the
     venv. 5 Submission README: 18-frame qualification, single-frame numbers, "main tests" pre-registered.
+- 2026-10-25: FOURTH REVIEW (of a43ca28). CORRECTION: the earlier "1,072 waveforms, 0 empty" scan only looked at
+  tx_out_* one level deep; it missed nested folders and tx_out.txt files. Exhaustive check (any depth, any file):
+  13 more zero-byte files, all with copies in work_icloud_leftover: split_T27/s1/tx_out_4, tx_out_6;
+  nominal_palin3/{tx_out.txt, c.sp, .spiceinit, ngspice.log}; pex_nominal/{tx_out.txt, c.sp, .spiceinit, ngspice.log};
+  pex_nominal_v2/tx_out.txt; ident_bigdac_tt_mm_T85/{.spiceinit, ngspice.log}. Restored 13/13 (copy + cmp).
+  Now: 0 zero-byte files anywhere under sim/work; all 44 leftover files byte-identical to their working copies.
+  Completeness of every tx_out* at any depth (1,113) against its folder's netlist stop time: all complete except
+  3 files in rerun_4 / rerun_5 subfolders = the failed first (Gear-only) retries of LDO-study chips; the successful
+  rerun_*_rdd waveforms are the ones copied into the analysed folders (sizes identical). Kept as a record.
+  Reanalysis: tx_split.py analyze and tx_variants.py report reproduce results/tx_split.json and
+  tx_variants_nominal.json exactly. pex_nominal is only produced/read by tx_pex.py nominal (which re-simulates);
+  superseded by sim/pex_nominal_ldo.py, nothing to reanalyse.
+  Fresh backup: /Volumes/PortableSSD/rffp-backup/sim_work_waveforms_2026-10-25.tar.zst (old backup kept).
+  Backup verified 2026-10-25 22:29: sim_work_waveforms_2026-10-25.tar.zst, 8.70 GB (zstd -6), zstd -t OK, 1,452 files,
+  names and sizes identical to sim/work, no zero-byte files. Old 2026-10-11 backup (13.6 GB) still present.
