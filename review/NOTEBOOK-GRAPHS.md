@@ -1,6 +1,6 @@
 # Notebook graph and number audit
 
-The updated notebook's 9 quantitative figures pass 23 independent checks of their actual plotted lines and bar groups against the bundled JSON data. Its two layout figures also render. The audit executes the code from the notebook itself; it does not replace the plots with newly generated approximations. Run `review/audit_notebook_graphs.py`; the extracted plotted coordinates and values are saved in `review/notebook-graph-data.json`.
+The current notebook's 10 quantitative figures pass 28 independent checks of their actual plotted lines and bar groups against the bundled JSON data. Its two layout figures also render. The audit executes the code from the notebook itself; it does not replace the plots with newly generated approximations. Run `review/audit_notebook_graphs.py`; the extracted plotted coordinates and values are saved in `review/notebook-graph-data.json`.
 
 ## Numerical cross-checks
 
@@ -11,7 +11,7 @@ The updated notebook's 9 quantitative figures pass 23 independent checks of thei
 | Impostor EER, 30 / 20 dB | 0% / 7.36979% | 0% / 7.37% |
 | PA-stage / mixer-stage fingerprint energy | 7.24143× | 7.24× energy |
 | Corresponding feature-norm ratio | 2.691× | 2.69× |
-| PA split-stage prediction increment | 79.6590 percentage points in R² | 79.7 points |
+| PA split-stage feature-agreement increment | 79.6590 percentage points in R² | 79.7 points |
 | LO prediction increment | −0.08844 percentage points in R² | −0.09 points in prose; −0.1 on chart |
 | Linear PA, mixer / RF fingerprint size | 0.98985× / 0.62353× | 0.99× / 0.62× |
 | Linear PA, 20 dB identification | 96.0417% → 84.5833% | 96% → 85% |
@@ -31,6 +31,6 @@ The updated notebook's 9 quantitative figures pass 23 independent checks of thei
 4. The summary now states that zero impostor EER applies at 30 dB; the plotted 20 dB EER is 7.37%.
 5. The arbitrary-data temperature comparison now gives 50.6% versus 49.4%, replacing “about 49% with or without.”
 6. The live-demo noise-scaled distance is identified as a diagonal metric on correlated features, not independent standard deviations or a significance level. The illustrated I-real peak difference rounds to about 1.6%; the 0.7% RMS concerns all 88 features.
-7. The claim that the live fingerprint comes only from transistor mismatch was corrected to include passive-device mismatch. The outstanding analog LVS errors are also disclosed next to the LDO description.
+7. The claim that the live fingerprint comes only from transistor mismatch was corrected to include passive-device mismatch. The layout correction and its verification are described next to the LDO results and in Appendix A.
 
-The plots accurately show the archived simulation results. This does not resolve the separate analog geometry and startup problems documented in `REVIEW.md`, and the source result JSON files were not changed.
+The plots accurately show the archived simulation results. The geometry and extracted-startup problems from the initial review were subsequently corrected; see the follow-up section of `REVIEW.md`. The source result JSON files were not changed.

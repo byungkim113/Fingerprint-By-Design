@@ -53,7 +53,7 @@ def show(*args, **kwargs):
             ref = load('tx_more_chips')
             equal('burst length 18 frames == headline', [b['18'][n][k] for n in ('16','64') for k in ('30dB','20dB')],
                   [ref[n][k] for n in ('16','64') for k in ('30dB','20dB')])
-        elif key.startswith('Stage-wise prediction'):
+        elif key.startswith('Stage-wise feature agreement'):
             a, s = load('tx_attrib_aligned')['27']['increments'], load('tx_split')['split']
             vals = [a['DAC unit currents'],a['LO imbalance'],a['switches/quads/load'],s['PA increment'],s['buffer increment']]
             equal('signed attribution increments', [p.get_width() for p in axes[0].patches], 100*np.array(vals[::-1]))
@@ -93,7 +93,7 @@ with contextlib.redirect_stdout(io.StringIO()):
     for i,c in enumerate(nb['cells']):
         if c['cell_type']=='code':
             exec(compile(''.join(c['source']),f'notebook-cell-{i}','exec'),env)
-EXPECTED = ['Level error of each code', 'Identification vs SNR', '30 dB SNR per sample', 'Stage-wise prediction',
+EXPECTED = ['Level error of each code', 'Identification vs SNR', '30 dB SNR per sample', 'Stage-wise feature agreement',
             'Fingerprint size by design', 'Fingerprint size', 'Supply drift (enrolled', 'Supply drift, unseen chips',
             'Supply drift, same 16 chips', 'Arbitrary data']
 missing = [k for k in EXPECTED if not any(t.startswith(k) for t in seen)]

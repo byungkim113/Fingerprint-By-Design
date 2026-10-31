@@ -1,7 +1,7 @@
 """Step 2b: which block carries the chip-specific fingerprint the Python model misses
 (pre-registered in PLAN.md, 2026-10-02). Uses only the step-2a runs (tx_ident.py).
 
-Stages, each turned into the same 88 level-ladder residual features:
+Stages, each turned into the same masked level-ladder residual features:
   S_dac   : model frame from the chip's op DAC unit currents, ideal LO
   S_lo_rc : S_dac with the RC-CR ac outputs as I/Q gains (what the Python model uses)
   S_lo_lim: S_dac with the limiter-output fundamentals as I/Q gains

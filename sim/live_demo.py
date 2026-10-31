@@ -6,8 +6,8 @@ half the length of the 128-sample frame in the main study), so two chips take a 
 minutes. Same netlist, PDK models and feature definition as tx_ident.py; only the frame
 differs, so the fingerprints are not numerically identical to the main study's.
 A second ngspice run simulates the "nominal" chip (typical models, no mismatch): the
-design's own prediction, which every real chip shares. Chip minus nominal is what is
-specific to each chip.
+design's mismatch-free response. Chip-to-chip differences distinguish devices; their
+shared offset from nominal does not.
 
 usage: python live_demo.py [n_chips] [--out DIR]     ->  DIR/live_fingerprints.json
 """

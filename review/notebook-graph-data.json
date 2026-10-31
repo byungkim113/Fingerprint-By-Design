@@ -459,8 +459,8 @@
     "figure": 6,
     "axes": [
       {
-        "title": "Stage-wise prediction increments (27 C)",
-        "xlabel": "increment in prediction R-squared (percentage points)",
+        "title": "Stage-wise feature agreement increments (27 C)",
+        "xlabel": "increment in feature agreement (percentage points)",
         "ylabel": "",
         "lines": [
           {
@@ -499,9 +499,9 @@
         ]
       },
       {
-        "title": "The PA amplifies chip differences",
+        "title": "Feature energy along the output path",
         "xlabel": "",
-        "ylabel": "chip-specific energy (x mixer output)",
+        "ylabel": "chip-specific feature energy (x mixer output)",
         "lines": [],
         "bars": [
           {

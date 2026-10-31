@@ -14,7 +14,7 @@ md(r"""
 
 Submission to the IEEE SSCS Open-Source Ecosystem "Code-a-Chip" Travel Grant Awards at ISSCC 2027
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/sscs-ose-code-a-chip.github.io/blob/isscc27-fingerprint-by-design/ISSCC27/submitted_notebooks/fingerprint_by_design/fingerprint_by_design.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/byungkim113/Fingerprint-By-Design/blob/main/notebook/fingerprint_by_design.ipynb)
 
 SPDX-License-Identifier: Apache-2.0
 
@@ -27,52 +27,47 @@ SPDX-License-Identifier: Apache-2.0
 md(r"""
 ## Introduction
 
-Every radio transmitter is slightly imperfect. No two transistors on a chip come out of the factory exactly alike, so two
-chips made from the **same design** send slightly different signals for the same data. A receiver can learn these tiny
-differences and recognise which physical chip sent a signal. This is called an **RF fingerprint**, and it is used to
-authenticate IoT devices, to spot counterfeit hardware, and, from the other side, it is a privacy concern.
+Small manufacturing differences give radio transmitters of the **same design** slightly different responses to the
+same data. A receiver can learn these differences, called **RF fingerprints**, to recognise individual chips.
+This can help authenticate IoT devices and detect counterfeit hardware, but it can also allow unwanted tracking.
 
-Most RF-fingerprinting work studies devices **after** they are built: people record real devices and train a
-classifier on whatever differences happen to be there. If the fingerprint drifts when the battery runs down or the
-device warms up, they find out in the field. Design-time studies exist: RF-PUF [1], for example, used simulated process
-variation in transmitter circuits to show that a receiver can learn device-specific signatures. What has been missing
-is an open, reproducible way for a designer to take one transmitter from schematic to verified layout and ask, with
-transistor-level Monte Carlo, where its fingerprint comes from, which design choices move it, and what makes it drift.
+Much RF-fingerprinting work starts with recordings from built devices. Design-time studies also exist: RF-PUF [1],
+for example, used simulated process variation in transmitter circuits to study device-specific signatures.
+Here we follow one transmitter from schematic to verified layout and use transistor-level Monte Carlo simulations
+to examine where its fingerprint comes from, how design choices change it, and how it drifts.
 
-This notebook asks a different question:
+Our question is:
 
-> **Can a circuit designer predict, explain and control a transmitter's fingerprint at design time, using only the open
-> PDK, before any silicon exists?**
+> **How much can a circuit designer learn about a transmitter's RF fingerprint before fabrication, using an open PDK
+> and open-source tools?**
 
-To answer it we designed a complete transmitter core in the open-source **SkyWater SKY130** process, verified its layout
-(DRC, LVS, parasitic extraction), and then simulated hundreds of "virtual chips" of that one design, each with its own
-random transistor mismatch from the PDK's Monte Carlo models. A software receiver then tries to tell the chips apart.
+We designed a transmitter core in **SkyWater SKY130**, checked its layout with DRC, LVS and parasitic extraction,
+and simulated hundreds of virtual chips using the PDK's mismatch models. A software receiver then attempts to
+identify the chips from their transmitted signals.
 
-What is new here is that combination, all with open tools: a stage-by-stage trace of where the fingerprint is
-created, controlled design experiments that move it (PA linearity, DAC sizing, an on-chip regulator), drift tests
-across supply and temperature, and tests whose predictions were written down before they ran. Along the way we found
-what actually breaks the fingerprint in this setup (it is not what we expected) and how a standard circuit block, an
-**on-chip voltage regulator**, makes it stable. We also report what did **not** work.
+The study follows the fingerprint through the signal chain, tests changes to PA linearity and DAC sizing, and
+compares receiver-side drift compensation with an on-chip voltage regulator. For the known repeated frame used here,
+supply drift caused a larger identification loss than temperature drift. The regulator maintained identification
+across the tested supply range, while temperature drift remained a problem when the receiver saw arbitrary data.
 """)
 
 md(r"""
 ## Results at a glance
 
-| Question | Answer (transistor-level simulations of the laid-out design; known 128-sample frame, see Section 2) |
+| Question | Answer (transistor-level simulations; known 128-sample frame, see Section 2; extraction study in Result 4) |
 |---|---|
 | Can chips of one identical design be told apart? | **Yes, with a 92 us burst** (18 repetitions of the frame, averaged). 16 chips: 100% at 30 dB SNR; 64 chips: still 100% at 30 dB. Same-design impostor equal error rate is 0% at 30 dB and 7.37% at 20 dB. From a single 128-sample frame: 89% (16 chips) and 73% (64 chips) at 30 dB. |
-| Where does the fingerprint come from? | Mismatch in the **DACs and mixers**, then about **7.24x greater chip-specific energy after the power amplifier (PA)**, including the PA's own mismatch. The output buffer adds very little; LO quadrature errors add almost nothing. |
-| Can a design choice change it? | **Yes.** A more linear PA shrinks the fingerprint to 0.62x. Bigger DAC transistors halve the mismatch at the mixer but barely change the final fingerprint, because the PA dominates. |
+| Where does the fingerprint come from? | Mismatch in the **DACs and mixers**, then about **7.24x greater chip-specific feature energy after the power amplifier (PA)**, including the PA's own mismatch. The output buffer adds very little; LO quadrature errors add almost nothing. |
+| Can a design choice change it? | **Yes.** A more linear PA shrinks the fingerprint to 0.62x. Increasing DAC transistor area by 4x reduces fingerprint size to 0.54x at the mixer and 0.85x at the RF output. |
 | Does it survive the layout? | **Yes.** After parasitic extraction the fingerprint is 0.99x its schematic size. |
 | What breaks it? | **Supply voltage more than temperature**, in this setup (external LO, known repeated frame, simulated devices). A 10% drop in supply voltage collapses identification from 100% to 34%. Cold plus low supply: 7%. |
 | Can design-time knowledge fix that? | **Mostly.** A drift model learned only from simulations of *other* chips at *wrong* process corners restores 100% at 30 dB across +-10% supply on chips it has never seen (it passed our strict pre-registered rule on 2 of 3 chip sets), and recovers 92% of the loss under combined temperature and supply drift. |
-| Can a design change fix it at the source? | **Yes.** We added an on-chip LDO regulator (bandgap reference + 5 V pass device). With it, identification stays at **100% across the whole +-10% supply range** and at 88-94% under combined temperature and supply drift. |
+| Can a design change fix it at the source? | **Yes.** We added an on-chip LDO regulator (bandgap reference + 5 V pass device). With it, identification stays at **100% at all seven tested supply values spanning +-10%** and at 88-94% under combined temperature and supply drift. |
 | What is still open? | Fingerprints work on a **known sequence** (like a packet preamble). Identifying chips from **arbitrary data** works at room conditions (93%) but not under temperature drift, even with the regulator. |
 
-The main tests were **pre-registered**: the prediction and the pass/fail rule were written into the project log
-*before* the simulations ran. Several predictions failed, and we report them as failures. Analyses chosen after seeing
-data are labelled **post hoc** or **exploratory** where they appear (for example drift model B v2 on the first chip
-set, the burst-length analysis in Result 1, and the extra regulator start-up ramps).
+For the main tests, predictions and pass/fail rules were recorded in the project log **before** the simulations ran.
+The results include failed predictions. Analyses chosen after seeing data are labelled **post hoc** or **exploratory** where they appear (for example drift model B v2 on the first chip set,
+the burst-length analysis in Result 1, and the extra regulator start-up ramps).
 """)
 
 md(r"""
@@ -81,7 +76,7 @@ md(r"""
 ![workflow](images/workflow.png)
 
 1. **The chip**: what we built in SKY130 (analog core, regulator and digital front end) and how it was verified.
-2. **How we measure a fingerprint**: virtual chips, the receiver, and how we kept ourselves honest; then **2b, try it
+2. **How we measure a fingerprint**: virtual chips, the receiver, and the test protocol; then **2b, try it
    yourself**: simulate two virtual chips at transistor level from this notebook.
 3. **Result 1, identification**: can we tell chips apart, and how does that scale?
 4. **Result 2, origin**: which blocks create the fingerprint?
@@ -99,8 +94,7 @@ There are three levels, from seconds to days:
 1. **Read and replot (default, seconds).** Every figure is recreated from the result files in `data/`, on Colab or
    locally, with only `numpy`, `matplotlib` and `gdstk` (for the layout file).
 2. **Simulate it yourself (optional, about 10-20 minutes on Colab).** Section 2b installs the SKY130 PDK and ngspice and
-   simulates two virtual chips plus the mismatch-free design at transistor level, then checks that your fingerprints match
-   ours. Set `RUN_LIVE = True` in that cell.
+   simulates two virtual chips plus the mismatch-free design at transistor level, then compares the results with our reference run. Set `RUN_LIVE = True` in that cell.
 3. **Reproduce everything (days).** The full study took several days of ngspice time on a laptop and about 55 GB of
    waveforms; *Reproducing the results* lists the script for every result.
 """)
@@ -197,7 +191,7 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
   1.95 V in every case we tested: -40, 27 and 85 C with 1, 10, 50 and 200 us supply ramps to 3.63 V (worst case
   1.933 V at 85 C with a 50 us ramp, so the margin is thin).
 
-**Correction.** A review by co-author Yucheng Wang found that our first LVS check had passed six devices drawn at the wrong
+**Correction.** A review by co-author Yucheng Wang found that our first LVS check had passed seven devices drawn at the wrong
 size, including the regulator's soft-start capacitor (30 x 30 um instead of 70 x 70 um). They were fixed, and the
 numbers above are for the corrected layout; Appendix A gives the details.
 
@@ -287,8 +281,7 @@ levels from a straight line: a set of numbers that differ from chip to chip. Tha
 
 **Noise and identification.** We add receiver noise at a chosen signal-to-noise ratio (SNR), *enroll* every chip at room
 temperature and nominal supply, and then ask which enrolled chip a new burst came from. The classifier is a simple
-nearest-template rule that accounts for the noise statistics. Most results are shown at 30 dB SNR (a good link) and
-20 dB (a weak one).
+nearest-template rule that accounts for the noise statistics. Most results are shown at per-sample SNRs of 30 dB and 20 dB.
 
 **What one decision uses.** A *burst* is **18 back-to-back repetitions of the 128-sample frame: 2,304 samples, or
 92 us** at 25 MS/s. Each chip is enrolled from 40 bursts, and every identification decision is made from **one** new
@@ -296,18 +289,16 @@ burst (10 test bursts per chip, 3 independent noise seeds). SNR is quoted per re
 repetitions improves the SNR of the measured fingerprint by about 12.6 dB. All accuracies in this notebook use this
 protocol unless stated otherwise, and Result 1 shows how accuracy falls with shorter bursts.
 
-**Keeping ourselves honest.** Before each main experiment we wrote down, in the project log, what we expected and the
-exact rule that would count as a pass. When a test failed we reported it. When we changed an analysis after seeing
-data we said so, labelled it post hoc, and where possible re-tested it on new chips; a few follow-up checks were never
-pre-registered and are labelled that way.
+**Test protocol.** Before each main experiment we recorded the prediction and pass criterion in the project log.
+Analyses changed after inspecting the results are labelled post hoc and, where possible, tested on new chips.
+Follow-up checks without a pre-registered criterion are identified separately.
 """)
 
 # ---------------------------------------------------------------- 2b live
 md(r"""
 ### 2b. Try it yourself: simulate two virtual chips
 
-This is the whole method in miniature, and you can run it. The cell below simulates, at transistor level in ngspice with
-the SKY130 models:
+The optional demo runs a small version of the study. It uses ngspice and the SKY130 models to simulate:
 
 * **chip 1 and chip 2**: the same netlist with two different Monte Carlo mismatch draws, and
 * **the nominal chip**: the same design with no mismatch at all, which is what a schematic simulation alone predicts.
@@ -322,10 +313,11 @@ By default (`RUN_LIVE = False`) the cell loads our own run of exactly this demo 
 Colab runtime) and compares your result with ours. The `sim/` folder next to this notebook holds the six project
 scripts the demo needs (the netlist generator `tx_full.py` and its helpers), copied unchanged from the project.
 
-*One thing we learned while building this cell:* ngspice's random-number generator gives different values for the same
+**Platform differences.** ngspice's random-number generator gives different values for the same
 seed on macOS and on Linux, so "chip 1" on Colab is a different virtual chip from our "chip 1" (our study ran on macOS).
-The statistics are the same, and the mismatch-free nominal chip involves no randomness, so the cell checks that your
-nominal chip matches ours exactly and that your two chips are about as far apart as ours.
+The mismatch-free nominal chip involves no random draws, so the cell checks it against our reference within a
+numerical tolerance. It also checks that the two simulated chips have distinct, finite fingerprints; their
+separation is printed for comparison with the reference run.
 """)
 code(r"""
 RUN_LIVE = False                       # True: run the transistor-level simulation here (Linux / Colab)
@@ -398,7 +390,7 @@ if RUN_LIVE:
         raise AssertionError("live simulation did not produce distinct, finite chip fingerprints")
 """)
 md(r"""
-**What this shows.** The left plot is dominated by the **design's own curve**: the PA's compression, and the way each
+The left plot is dominated by the **design's own curve**: the PA's compression, and the way each
 code's level depends on the codes around it in this frame. It is jagged, but it is not noise (these are noise-free
 simulations), and the mismatch-free simulation predicts it. Two things are left over:
 
@@ -421,9 +413,8 @@ and what makes it drift.
 md(r"""
 ## 3. Result 1: chips of one design can be told apart
 
-The first question is simply whether the fingerprint is large enough to identify chips. Below, accuracy for 16, 32 and
-64 virtual chips at four SNRs, and the **authentication** view: can the receiver reject an *impostor*, a chip of the
-same design that was never enrolled?
+We measured identification accuracy for 16, 32 and 64 virtual chips at four SNRs. We also tested
+**authentication**: whether the receiver can reject an unenrolled chip of the same design.
 """)
 code(r"""
 mc = load("tx_more_chips"); au = load("tx_auth")
@@ -442,15 +433,15 @@ ax[1].set(ylabel="equal error rate (%)", title="Rejecting same-design impostors\
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** With a good link (30 dB) every chip is identified correctly, even among 64 chips of the same design,
+At 30 dB every test burst is identified correctly, including in the 64-chip population,
 and the measured impostor EER is 0%. At 20 dB, accuracy drops to 91% for 64 chips and impostor EER rises to 7.37%.
-At 10 dB, identification is only 18-35% across these population sizes. The fingerprint is real and usable, but it is
-small: it needs a decent SNR.
+At 10 dB, identification is only 18-35% across these population sizes. Performance therefore depends strongly on SNR, even with 18-frame averaging.
 
 Each point rests on a finite number of decisions: 480 for 16 chips and 1,920 for 64 chips (10 test bursts per chip,
 3 noise seeds). The 95% intervals are 99.2-100% for 16 chips at 30 dB, 95.4-98.4% at 20 dB, 99.8-100% for 64 chips at
-30 dB and 89.5-92.1% at 20 dB. These intervals cover the receiver noise only: the chips themselves are one fixed set
-of Monte Carlo draws.
+30 dB and 89.5-92.1% at 20 dB. These approximate binomial intervals describe receiver-noise trials on fixed Monte Carlo chips; they do not
+measure uncertainty across chip populations. Decisions share chip waveforms and enrolled templates, so the intervals
+also omit dependence introduced by that shared setup.
 
 **How much averaging does this need?** *(Post hoc: added after a review pass asked for it.)* The plot below
 reruns exactly the same analysis with 1 to 18 frames per burst; the 18-frame points reproduce the numbers above.
@@ -468,17 +459,16 @@ ax[0].set_ylabel("correct identification (%)"); ax[0].legend(loc="lower right")
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** The fingerprint is strong enough to identify chips from a single 128-sample frame only on a good
-link (89% for 16 chips at 30 dB), and the accuracy grows with averaging. A designer or receiver can trade observation
-time for reliability: at 30 dB, 4 frames (20 us) already give 99%+; at 20 dB, 18 frames are needed for 91-97%. In a
-real packet this is the length of known preamble the receiver must collect.
+A single 128-sample frame gives 89% accuracy for 16 chips and 73% for 64 chips at 30 dB. Four frames
+(20.48 us) give more than 99% for both populations. At 20 dB, even 18 frames give only 91-97%.
+For this receiver, longer observation of a known sequence improves reliability at the cost of a longer burst.
 """)
 
 # ---------------------------------------------------------------- result 2
 md(r"""
 ## 4. Result 2: where the fingerprint comes from
 
-A transmitter has many imperfect blocks. To find which ones carry the fingerprint, we measured the chip-to-chip
+To trace the fingerprint through the transmitter, we measured the chip-to-chip
 pattern at several points along the chain in the same simulations (DAC currents, mixer output, PA output, final RF
 output) and asked how much of the final fingerprint each stage already explains.
 """)
@@ -492,20 +482,23 @@ ax[0].barh(list(parts)[::-1], [100 * v for v in list(parts.values())[::-1]],
 for i, v in enumerate(list(parts.values())[::-1]):
     ax[0].text(max(100 * v, 0) + 1, i, f"{100 * v:.1f}", va="center", ha="left")
 ax[0].axvline(0, color="k", lw=0.6)
-ax[0].set(xlabel="increment in prediction R-squared (percentage points)", title="Stage-wise prediction increments (27 C)", xlim=(-5, 100))
+ax[0].set(xlabel="increment in feature agreement (percentage points)", title="Stage-wise feature agreement increments (27 C)", xlim=(-5, 100))
 ax[1].bar(["mixer output", "after PA", "after buffer"], [1, sp["energy_pa_over_mix"], sp["energy_pa_over_mix"] * sp["energy_rf_over_pa"]],
           color=[C["base"], C["bad"], C["bad"]])
-ax[1].set(ylabel="chip-specific energy (x mixer output)", title="The PA amplifies chip differences")
+ax[1].set(ylabel="chip-specific feature energy (x mixer output)", title="Feature energy along the output path")
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** The DAC and mixer mismatch is where the fingerprint *starts*. In the split-stage comparison,
-predicting RF features from mixer features gives R-squared 0.203, while using PA features gives 0.999: a **79.7-point
+The fingerprint is already present at the DACs and mixer. In the split-stage comparison, direct agreement
+with the final RF features, measured as 1 - squared error / RF feature energy, is 0.203 for the mixer features
+and 0.999 for the PA features: a **79.7-point
 increase**, with only 0.06 points left for the buffer. The left chart combines the DAC/LO/mixer attribution experiment
-with the separate PA/buffer split experiment; these increments are not an additive partition totaling 100%. It also
-retains the small negative LO increment (-0.09 points).
+with the separate PA/buffer split experiment. These are descriptive comparisons, not a causal allocation of
+fingerprint variation, and the increments do not form an additive partition totaling 100%. It also
+includes the small negative LO increment (-0.09 points).
 
-The right chart shows **energy**, which is squared feature magnitude: the PA-to-mixer ratio is 7.24x and the final
+The right chart shows **feature energy**: the sum of squared, population-centred features after each stage
+is normalised for complex gain. It measures fingerprint variation rather than RF output power: the PA-to-mixer ratio is 7.24x and the final
 RF-to-mixer ratio is 7.50x. The corresponding feature-norm ratios are about 2.69x and 2.74x, not 7x amplitude gains.
 LO quadrature errors contribute almost nothing in this analysis because the limiters square up the LO.
 
@@ -513,7 +506,7 @@ A later experiment showed that the PA does not only amplify upstream mismatch, i
 fingerprint too (Result 3). We don't split the fingerprint further into transistor and passive contributions because
 the PDK's mismatch-scaling switch acts on transistors, poly resistors and MIM capacitors together.
 
-This also explains a failure from early in the project: a fast "block-by-block" Python model of the transmitter, built
+An early modelling attempt showed the limits of a simpler approach: a fast "block-by-block" Python model of the transmitter, built
 from separate block simulations, matched the real circuit only up to the mixer (correlation 0.9) and fell to 0.5 at
 the RF output, because it treated the PA as a fixed curve rather than a source and amplifier of mismatch.
 """)
@@ -522,13 +515,16 @@ the RF output, because it treated the PA as a fixed curve rather than a source a
 md(r"""
 ## 5. Result 3: design choices change the fingerprint
 
-If the fingerprint has a mechanism, a designer should be able to move it. We made two variants of the transmitter and
-simulated the same 16 chips (same random draws) in each, with predictions written down first:
+We tested two design changes using 16 Monte Carlo seeds for each variant, with the predictions recorded
+before the simulations:
 
 * **Linear PA**: source degeneration in the PA. Prediction: the mixer-level fingerprint stays the same, the RF
   fingerprint shrinks below 0.7x.
 * **Big DAC**: DAC transistors with 4x the area. Prediction (Pelgrom's law): mismatch halves at the mixer **and** at
   the RF output (0.35-0.65x).
+
+Here **fingerprint size** is the mean, across features, of the chip-to-chip standard deviation after complex-gain
+normalisation. This differs from the squared-feature-energy measure used in Result 2.
 """)
 code(r"""
 v = load("tx_variants_mc"); b = v["base"]
@@ -546,15 +542,13 @@ ax[1].set_xticks(x, list(names.values())); ax[1].set(ylim=(0, 105), ylabel="iden
 plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.**
-
 * **Linear PA: prediction confirmed.** The mixer-level fingerprint is unchanged (0.99x) but the RF fingerprint drops
-  to 0.62x, and identification at 20 dB falls from 96% to 85%. The PA is a **design lever**. Used in one direction it
-  makes devices easier to authenticate; in the other it is an "anti-fingerprint" choice for privacy. It also lowered
+  to 0.62x, and identification at 20 dB falls from 96% to 85%. In this experiment, linearising the PA reduced both
+  fingerprint size and identification accuracy, suggesting a possible tradeoff between authentication and privacy. It also lowered
   EVM from 11.4% to 6.1%.
-* **Big DAC: prediction failed, informatively.** Mismatch at the mixer roughly halved, consistent with Pelgrom's scaling (0.54x), but
-  the RF fingerprint only dropped to 0.85x. The PA's own mismatch dominates, so making the DAC better matched barely
-  matters. We had underestimated the PA as a *source* of fingerprint, and this experiment is how we found out.
+* **Big DAC: prediction failed.** Mismatch at the mixer roughly halved, consistent with Pelgrom's scaling (0.54x), but
+  the RF fingerprint only dropped to 0.85x. Improving DAC matching had a smaller effect at the RF output, consistent
+  with the PA adding substantial mismatch of its own.
 
 **Does this depend on the exact mismatch model?** We re-ran the key comparisons with the PDK's mismatch (transistors,
 poly resistors and MIM capacitors) scaled by 0.5x and 2x. The linear-PA effect (0.64x at both scales) and the supply-versus-temperature ranking (Result 5)
@@ -565,8 +559,7 @@ held across that 4x range.
 md(r"""
 ## 6. Result 4: the fingerprint survives the layout
 
-Wiring adds capacitance everywhere, and every chip has the same wiring, so one might expect it to wash out the small
-differences between chips. We extracted the parasitic capacitance of the transmitter core layout (before the regulator
+To test whether wiring parasitics change the fingerprint, we extracted the parasitic capacitance of the transmitter core layout (before the regulator
 was added) and re-ran the Monte Carlo identification on the extracted netlist. The final chip with the regulator was
 extracted too and checked at nominal conditions: EVM 13.5% post-layout vs 14.0% in the schematic.
 """)
@@ -582,11 +575,13 @@ ax[1].set_xticks(xx, [t + " C" for t in T]); ax[1].set(ylim=(80, 100), ylabel="i
 ax[1].legend(loc="upper center", ncol=2, fontsize=8); ax[1].set_ylim(80, 102); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** The fingerprint is essentially unchanged by the layout (0.99x its schematic size). At 30 dB
-identification is 100% before and after extraction; at 20 dB it moves by a few points either way (from about -4 to
-+2 points), which is within the variation we see between noise seeds and chip sets. A fingerprint predicted from the
-schematic is a good guide to the laid-out chip. (The post-layout Monte Carlo draws follow the extracted netlist's
-device order, so these are different random chips: the comparison is between populations.)
+The extracted population has 0.99x the schematic population's fingerprint size. At 30 dB, identification is
+100% in both populations; at 20 dB, the difference ranges from about -4 to +2 percentage points across temperatures,
+comparable to the variation observed between noise seeds and chip sets.
+
+The post-layout draws follow the extracted netlist's device order and therefore represent different random chips.
+This is a comparison between populations, rather than a paired comparison of individual chips. Within this test,
+the schematic and capacitance-extracted populations have similar fingerprint sizes and identification performance.
 """)
 
 # ---------------------------------------------------------------- result 5
@@ -596,9 +591,9 @@ md(r"""
 Real devices do not stay at room temperature and nominal supply. We enrolled every chip at 27 C and 1.80 V and then
 tested it at other conditions.
 
-**Temperature turned out to be a minor problem** for this design: from -40 C to 85 C identification stays at 100% at
-30 dB (and 92-98% at 20 dB). **Supply voltage is the real threat.** Two parts of this setup favour that result: the LO
-comes from outside the chip (in real devices, temperature hurts mostly through the on-board crystal's frequency drift,
+**Temperature alone caused little loss** in this test: from -40 C to 85 C identification stays at 100% at
+30 dB (and 92-98% at 20 dB). **Supply changes caused larger losses.** This comparison depends on the setup: the LO
+comes from outside the chip (measured-device studies report temperature-sensitive carrier frequency offset [5],
 Section 9), and the receiver sees a known, repeated frame.
 """)
 code(r"""
@@ -617,8 +612,7 @@ plt.tight_layout(); plt.show()
 """)
 md(r"""
 Within about +-2-5% of the nominal supply identification holds; at -10% it collapses to 34%, and cold plus low supply
-gives just 7%. The drift moves **every** chip's fingerprint in a similar direction, which pushes them all towards the
-wrong templates.
+gives just 7%. A shared component of drift moves the chips' fingerprints away from their nominal enrolled templates.
 
 ### Can design-time knowledge compensate?
 
@@ -643,26 +637,25 @@ ax[1].set_xticks(xx, lab, fontsize=8); ax[1].set(ylim=(0, 105), ylabel="identifi
 ax[1].legend(loc="lower right", fontsize=8); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** At 30 dB the design-time drift model restores identification to 100% across +-10% supply on chips
-it has never seen, at no cost at nominal conditions, and recovers 92% of the loss under combined temperature and supply
-drift, where a simpler projection method failed. The record is honest but mixed: the method passed on two of three
-chip sets and narrowly failed on the first (a 5-point drop at -2% supply), and at 20 dB it helps a lot but never meets
-our strict "never worse anywhere" rule.
+For the unseen chips plotted above, the drift model restores 100% identification at all seven supply values
+at 30 dB, with no loss at nominal conditions. Under combined temperature and supply drift, it recovers 92% of the
+accuracy loss, where a simpler projection method failed.
 
-So receiver-side compensation works well but not perfectly. That led to the question behind the next result: can the
-**transmitter** be designed so that the drift does not happen in the first place?
+Across the three chip sets, the method passed the pre-registered rule on two and failed on the first because of a
+5-point drop at -2% supply. At 20 dB it improves accuracy in many conditions but fails the strict
+"never worse anywhere" rule. We next tested whether regulating the transmitter's supply could reduce the drift
+without receiver-side compensation.
 """)
 
 # ---------------------------------------------------------------- result 6
 md(r"""
 ## 8. Result 6: fixing drift at the source with an on-chip regulator
 
-Real radios do not run their analog circuits straight from a battery; they use a regulator. We designed one in SKY130
-and put it on the chip:
+We added an on-chip SKY130 regulator to isolate the core from external supply changes. It includes:
 
 * a **bandgap reference** built from vertical PNP transistors (1.213-1.217 V from -40 C to 85 C and 2.97-3.63 V input),
 * an error amplifier and a **5 V PMOS pass device** that turn an external 3.3 V supply into the core's 1.8 V
-  (+-0.4% over all temperatures and input voltages, about 1 ohm load regulation),
+  (+-0.4% over the tested temperatures and input voltages, about 1 ohm load regulation),
 * on-chip decoupling, a **soft-start** and a **start-up guard**,
 * all laid out (543 x 244 um): DRC-clean, strict LVS-clean, and start-up checked on the extracted layout
   (Section 1).
@@ -689,13 +682,13 @@ ax[1].set_xticks(xx, [p[2] for p in pairs]); ax[1].set(ylim=(0, 105), ylabel="id
 ax[1].legend(loc="lower right", fontsize=8); plt.tight_layout(); plt.show()
 """)
 md(r"""
-**What this shows.** With the regulator, identification stays at **100% across the whole +-10% supply range** at 30 dB
-(96-98% at 20 dB), with no receiver-side compensation at all. Under combined temperature and supply drift it stays
-between 88% and 94%, where the unregulated chip fell as low as 7% (the unregulated corner data come from a different
-set of 16 chips, so that comparison is between populations, not chip by chip).
+With the regulator, identification is **100% at all seven tested supply values** spanning +-10% of 3.3 V
+at 30 dB SNR, and 96-98% at 20 dB, without receiver-side compensation. These results use the known 18-frame burst.
+Under combined temperature and supply drift, accuracy is 88-94%, compared with a minimum of 7% without regulation.
+The unregulated corner data come from a different set of 16 chips, so that comparison is between populations.
 
-This is the main "by design" result of the project: **whether a fingerprint is stable is decided by an ordinary design
-choice**, how the analog supply is generated, and it can be checked before tape-out.
+For this transmitter and receiver, regulating the analog supply substantially reduces the identification loss
+caused by supply drift. The arbitrary-data tests below examine how far that benefit extends.
 """)
 
 # ---------------------------------------------------------------- what did not work
@@ -727,20 +720,20 @@ ax.set_xticks(xx, [c[2] for c in cm]); ax.set(ylim=(0, 105), ylabel="identificat
 ax.legend(fontsize=8); plt.tight_layout(); plt.show()
 """)
 md(r"""
-With the regulator, supply drift is mostly fixed even for arbitrary data (-10%: 59% to 84%; +10%: 49% to 81%), but
-**temperature** remains the limit (85 C: 50.6% without the regulator and 49.4% with it). The regulator also costs something
-here: at nominal conditions the model-based receiver scores 84% with the LDO against 93% without it, so this test
-failed its pre-registered gate overall. Identifying chips from arbitrary data while their temperature changes is the
+With the regulator, identification under supply drift improves even for arbitrary data (-10%: 59% to 84%; +10%: 49% to 81%), but
+**temperature** remains the limit (85 C: 50.6% without the regulator and 49.4% with it). At nominal conditions the model-based receiver scores 84% with the LDO against 93% without it, so this test
+failed its pre-registered criterion overall. Identifying chips from arbitrary data while their temperature changes is the
 open problem this project leaves.
 
-**Other honest limits.**
+**Limitations.**
+
 * Everything is **simulation**. The only chip-to-chip randomness is the PDK's mismatch model; no silicon was measured.
-  The sensitivity study (0.5x-2x mismatch) shows the conclusions are robust to the model being off by a constant factor,
-  but not to it being wrong in kind.
-* One base design (plus two variants). The mechanisms are likely general; the numbers are specific to this design.
+  The sensitivity study (0.5x-2x mismatch) tests the effect of scaling mismatch in transistors, poly resistors and MIM capacitors,
+  but does not establish that the model captures every source of variation in fabricated chips.
+* One base design (plus two variants). The numerical results are specific to these circuits; other designs may have different dominant mechanisms.
 * The receiver uses ideal downconversion; real receivers add their own impairments and frequency offset. In particular,
-  measured studies on real devices find temperature hurts mostly through the **crystal oscillator's frequency drift**,
-  which our design avoids by taking the LO from outside the chip.
+  measured-device studies report temperature-sensitive **carrier frequency offset** [5]. Our external-LO, ideal-receiver
+  setup does not include that source of drift.
 * Regulator start-up was checked with parasitic capacitance but not wire resistance, at typical process and without
   mismatch; the worst peak (1.933 V) leaves only 17 mV of margin. Starting the *schematic* from exactly 0 V at 85 C
   still fails to converge in ngspice (the extracted layout starts normally in the same cases).
@@ -752,17 +745,18 @@ open problem this project leaves.
 md(r"""
 ## 10. Lessons for circuit designers
 
-1. **The PA decides how big the fingerprint is.** Chip-specific energy is about 7.24x greater after the PA, which
-   both shapes upstream mismatch and adds its own.
-   Linearising the PA shrinks the fingerprint; that is an easy lever for privacy, and the reverse for authentication.
-2. **Matching the DAC better barely matters** once the PA dominates. Spend area where the fingerprint is made.
-3. **Supply, more than temperature, is the drift that breaks identification** in a design like this (external LO,
-   known repeated frame).
-   A regulated analog supply makes the fingerprint stable; check it in simulation before tape-out.
-4. **Block-level models can mislead.** Our early behavioural model got the fingerprint right only up to the mixer and
-   made temperature look like the main problem. Transistor-level simulation of the real layout changed the conclusions.
-5. **Layout matters for the radio, not for the fingerprint.** Parasitics broke the I/Q balance (fixed by a small
-   layout change) but left the fingerprint itself almost untouched.
+1. **Check the PA as well as the DAC.** Feature energy increased by 7.24x between the mixer and PA output.
+   Linearising the PA reduced RF fingerprint size to 0.62x and lowered identification accuracy at 20 dB.
+2. **Better matching in one block may have a limited effect at the output.** Increasing DAC transistor area by 4x
+   reduced mixer fingerprint size to 0.54x, but RF fingerprint size fell only to 0.85x.
+3. **Test drift with the intended supply arrangement.** For this external-LO, known-frame setup, supply drift caused
+   larger losses than temperature alone. Adding the LDO maintained 100% identification across the tested supply
+   range at 30 dB, but did not solve arbitrary-data identification under temperature drift.
+4. **Validate behavioural models against the full circuit.** Our early block model reproduced the fingerprint
+   reasonably well up to the mixer, but its RF-output correlation fell to 0.5. It missed the PA's contribution.
+5. **Check radio performance and fingerprint variation separately after extraction.** Wiring parasitics initially
+   caused a large I/Q phase error. After the layout correction, the extracted population's fingerprint size was
+   close to the schematic value.
 """)
 
 # ---------------------------------------------------------------- reproducibility
@@ -810,12 +804,12 @@ them per chip (an early version without this used about 50 GB of RAM).
 md(r"""
 ## Conclusion
 
-Using only the open SKY130 PDK and open-source tools, we designed and verified a complete transmitter core and showed
-that its RF fingerprint can be **predicted, explained and controlled before silicon exists**. Chips of one design are
-reliably identifiable; the fingerprint is created by DAC and mixer mismatch and amplified by the PA; a linear PA shrinks
-it; it survives layout parasitics; and its real weakness, supply drift, can be partly compensated with design-time
-models and removed at the source by an on-chip regulator. The main open problem is identifying chips from arbitrary
-data under temperature drift.
+This SKY130 study links transmitter mismatch, layout and receiver performance in a reproducible simulation flow.
+With a known 92 us burst at 30 dB SNR, all test decisions were correct for populations of up to 64 virtual chips.
+The stage comparisons and design variants show a substantial PA contribution, while the capacitance-extracted
+population retained a similar fingerprint size. Both design-time drift compensation and an on-chip LDO improved
+identification under supply changes. Temperature drift with arbitrary data remains unresolved, and fabricated-chip
+measurements are needed to test these predictions.
 
 ## Future work
 
@@ -837,7 +831,7 @@ data under temperature drift.
    combinatorial security primitives for machine-learning-based authentication in 65 nm CMOS," IEEE, 2022 (IEEE Xplore 9682436).
 4. S. S. Hanna, D. Cabric, "Deep learning based transmitter identification using power amplifier nonlinearity,"
    arXiv:1811.04521.
-5. "Characterizing and mitigating the effects of device temperature on RF fingerprinting accuracy," arXiv:2607.25070;
+5. "Characterizing and mitigating the effects of device temperature on RF fingerprinting accuracy," [arXiv:2607.25070](https://arxiv.org/abs/2607.25070);
    "RF-TESI: Radio frequency fingerprint-based smartphone identification under temperature variation," ACM, 2023,
    doi:10.1145/3636462.
 6. M. J. M. Pelgrom, A. C. J. Duinmaijer, A. P. G. Welbers, "Matching properties of MOS transistors," IEEE JSSC, vol. 24,
@@ -851,9 +845,9 @@ None.
 
 ## Appendix A: layout verification correction
 
-Found on 2026-10-24 in a review of the verification by co-author Yucheng Wang, and fixed on 2026-10-25. The review
-found that our layout check had passed a layout whose device sizes did not all match the design: Netgen reported
-"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Six devices differed:
+A review by co-author Yucheng Wang on 2026-10-24 found that our layout check had passed a layout whose device sizes did not
+all match the design. The discrepancies were fixed on 2026-10-25. In the original check, Netgen reported
+"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Seven devices differed:
 
 | Device | Designed | Drawn | Cause | Fix |
 |---|---|---|---|---|

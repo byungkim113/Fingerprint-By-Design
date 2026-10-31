@@ -1,6 +1,6 @@
 # Fingerprint by Design
 
-Predicting, tracing and stabilising the RF fingerprint of an open-source SKY130 transmitter, before any silicon exists.
+A simulation study of how mismatch, circuit design and supply regulation affect the RF fingerprint of a SKY130 transmitter.
 This is the full project behind the IEEE SSCS Code-a-Chip (ISSCC 2027) notebook in [`notebook/`](notebook/).
 
 ## Status (2026-10-25)
@@ -15,6 +15,10 @@ This is the full project behind the IEEE SSCS Code-a-Chip (ISSCC 2027) notebook 
 
 Identification results use a known 128-sample frame repeated 18 times per decision (2,304 samples, 92 us); see the
 notebook, Section 2 and Result 1, for the protocol and the accuracy with shorter bursts.
+
+Fresh submission checks passed on 2026-10-31: standalone notebook, math and data audit, digital RTL/gate tests,
+analog DRC/LVS, live transistor simulation and extracted-LDO start-up. See [the validation record](review/FINAL_VALIDATION.md)
+for results, commands and the limits of this check.
 
 ## Layout of the repository
 

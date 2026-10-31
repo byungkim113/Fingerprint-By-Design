@@ -1155,3 +1155,11 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   and the tx_full.py comment corrected. (2) setup_tools.sh now enables the pinned PDK even when another SKY130 version
   is enabled, and fails unless `volare output` and sky130A/SOURCES show c6d73a35 (tested in Ubuntu 22.04 with
   8afc8346 enabled first: switched and confirmed; second run idempotent).
+
+- 2026-10-31: FINAL SUBMISSION REVIEW. Integrated upstream f86a0c0 with the language edits. Retained the withdrawn
+  transistor/passive split, representative details, review attribution and pinned-PDK installer. Repaired the
+  Colab badge (old fork branch returns 404; public project notebook returns 200). Corrected the historical device
+  count to seven: the original tx_core LVS report lists two feedback resistors, four capacitors and one bias resistor.
+  Fresh standalone notebook, 28 figure comparisons, math/data audit, RTL/gate/mutation tests, Magic/KLayout DRC,
+  strict LVS, power probes, live demo and 12 extracted-LDO startup cases pass. Full evidence and limitations:
+  review/FINAL_VALIDATION.md; review/final-validation-data.json. Full multi-day MC study was not rerun.

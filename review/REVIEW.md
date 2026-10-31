@@ -1,5 +1,7 @@
 # Circuit, math, notebook, and repository review — 2026-10-24
 
+**Historical report.** The opening findings describe the 2026-10-24 state. The layout errors and extracted-startup overshoot were corrected on 2026-10-25; see **Follow-up fixes** below. The schematic startup convergence limitation remains. This review was performed by co-author Yucheng Wang.
+
 Reviewed remote commit `bb00f2e`, then made the local fixes described below. The notebook runs, but the analog circuit is **not ready for signoff**. Strict LVS finds device-dimension errors, and LDO startup fails important checks.
 
 ## Confirmed circuit problems
@@ -100,7 +102,7 @@ Verification used the project's pinned SKY130 hash, ngspice 47, Magic 8.3.684, N
 
 ## Follow-up fixes — 2026-10-25
 
-All six property errors above were confirmed and fixed; the strict check now passes.
+All seven device-property discrepancies above were confirmed and fixed; the strict check now passes.
 
 | Device | Cause | Fix | Now |
 |---|---|---|---|

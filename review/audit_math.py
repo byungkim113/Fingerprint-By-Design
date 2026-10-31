@@ -21,7 +21,9 @@ for folder in ('sim', 'analysis', 'layout', 'notebook'):
         ast.parse(p.read_text(encoding='utf-8'), filename=str(p))
     print('Python syntax', folder, len(paths), 'PASS')
 for p in (ROOT / 'notebook' / 'sim').glob('*.py'):
-    print('Bundled script identical', p.name, p.read_bytes() == (ROOT / 'sim' / p.name).read_bytes())
+    same = p.read_bytes() == (ROOT / 'sim' / p.name).read_bytes()
+    assert same, f'Bundled script differs: {p.name}'
+    print('Bundled script identical', p.name, same)
 for p in (ROOT / 'notebook' / 'data').glob('*.json'):
     json.loads(p.read_text())
     original = ROOT / 'results' / p.name
@@ -32,14 +34,19 @@ for name, original in [('tx_core', ROOT / 'layout/tx_core.gds'), ('tx_frontend',
     other = original.read_bytes()
     if original.suffix == '.gz':
         other = gzip.decompress(other)
-    print('Bundled GDS identical', name, data == other)
+    assert data == other, f'Bundled GDS differs: {name}'
+    print('Bundled GDS identical', name, True)
 
-print('RRC energy', np.sum(__import__('txmodel').H_RRC ** 2))
-print('Thermometer exhaustive', np.array_equal(tx.thermometer(np.arange(32)).sum(0), np.arange(32)))
+energy = np.sum(__import__('txmodel').H_RRC ** 2)
+assert np.isclose(energy, 1.0)
+print('RRC energy', energy)
+assert np.array_equal(tx.thermometer(np.arange(32)).sum(0), np.arange(32))
+print('Thermometer exhaustive', True)
 ci, cq, _ = tx.qpsk_codes(128, seed=1)
 frame = np.loadtxt(ROOT / 'digital/tb/frame.hex', dtype=str)
 words = np.array([int(v, 16) for v in frame])
-print('Digital frame matches analog stimulus', np.array_equal(words, ci * 32 + cq))
+assert np.array_equal(words, ci * 32 + cq), 'Digital and analog frames differ'
+print('Digital frame matches analog stimulus', True)
 
 for name, codes in [(f'frame{f}', tx.qpsk_codes(128, seed=f)[:2]) for f in range(1, 6)] + [('demo', demo_codes())]:
     ci, cq = codes
@@ -47,6 +54,7 @@ for name, codes in [(f'frame{f}', tx.qpsk_codes(128, seed=f)[:2]) for f in range
     A = np.concatenate([np.eye(22)[ci[keep]-5], np.eye(22)[cq[keep]-5][:, 1:]], 1)
     active = np.any(A, axis=0)
     rank = np.linalg.matrix_rank(A)
+    assert rank == active.sum(), f'Unidentifiable observed levels: {name}'
     print('Level fit rank', name, 'rows', len(A), 'rank', rank, 'observed columns', active.sum())
     x = (2*ci/31-1) + 1j*(2*cq/31-1)
     li, lq, si, sq = level_fit(x, ci, cq)
@@ -54,6 +62,7 @@ for name, codes in [(f'frame{f}', tx.qpsk_codes(128, seed=f)[:2]) for f in range
     f = ti.features(x, ci, cq)
     ti.MASKED = True
     fm = ti.features(x, ci, cq)
+    assert np.sqrt(np.mean(fm*fm)) < 1e-12, f'Artificial linear-signal fingerprint: {name}'
     print('Ideal linear ladder residual rms', name, 'unmasked', np.sqrt(np.mean(f*f)), 'masked', np.sqrt(np.mean(fm*fm)))
     ti.MASKED = False
 
@@ -62,6 +71,7 @@ t = np.arange(0, 4/tx.FS + 1e-12, 20e-12)
 expected = .2 + .1j
 v = np.real(expected * np.exp(2j*np.pi*tx.FLO*t))
 y = tx.downconvert(t, v, 4)
+assert np.max(np.abs(y-expected)) < 2e-4, 'Downconversion sign or scale mismatch'
 print('Downconversion max complex error', float(np.max(np.abs(y-expected))))
 
 from robust2 import mahalanobis_acc, mixture_acc, noise_cov, drift_model
