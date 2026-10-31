@@ -559,8 +559,8 @@ held across that 4x range.
 md(r"""
 ## 6. Result 4: the fingerprint survives the layout
 
-To test whether wiring parasitics change the fingerprint, we extracted the parasitic capacitance of the transmitter core layout (before the regulator
-was added) and re-ran the Monte Carlo identification on the extracted netlist. The final chip with the regulator was
+To test whether wiring parasitics change the fingerprint, we extracted the parasitic capacitance of the transmitter core layout (before quadrature-network
+retuning and regulator integration) and re-ran the Monte Carlo identification on the extracted netlist. The final chip with the regulator was
 extracted too and checked at nominal conditions: EVM 13.5% post-layout vs 14.0% in the schematic.
 """)
 code(r"""
