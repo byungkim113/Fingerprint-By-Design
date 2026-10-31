@@ -8,7 +8,7 @@
 | Byung Kim (Leader) | United States Air Force Academy | No | No | c29byung.kim@afacademy.af.edu |
 | Yucheng Wang (Representative) | University of Wisconsin-Madison | No | No | ywang3574@wisc.edu |
 
-**Designated representative (attends ISSCC 2027 in person):** Yucheng Wang · **Applicant category:** [e.g. undergraduate]
+**Designated representative (attends ISSCC 2027 in person):** Yucheng Wang · **Applicant category:** undergraduate student
 
 ### Question
 Can a circuit designer predict, explain and control a transmitter's RF fingerprint — the chip-to-chip differences a
