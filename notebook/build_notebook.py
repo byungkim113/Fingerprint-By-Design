@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0
 | Name | Affiliation | IEEE Member | SSCS Member | Email |
 |---|---|---|---|---|
 | Byung Kim (Leader) | United States Air Force Academy | No | No | c29byung.kim@afacademy.af.edu |
-| Yucheng Wang | University of Wisconsin-Madison | No | No | ywang3574@wisc.edu |
+| Yucheng Wang (Representative) | University of Wisconsin-Madison | No | No | ywang3574@wisc.edu |
 """)
 
 md(r"""
