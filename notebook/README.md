@@ -68,5 +68,5 @@ notebook gives the details.
 ## Reproducing everything
 
 Full source (layout generators, simulation and analysis scripts, digital RTL, testbench and LibreLane configuration,
-project log with every pre-registration): <https://github.com/byungkim113/Code-A-Chip>. Section 11 of the notebook
+project log with every pre-registration): <https://github.com/byungkim113/Fingerprint-By-Design>. Section 11 of the notebook
 lists the tool versions and the script behind each result.

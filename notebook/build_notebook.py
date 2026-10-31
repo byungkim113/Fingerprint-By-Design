@@ -125,7 +125,7 @@ except ImportError:
 SUB = "ISSCC27/submitted_notebooks/fingerprint_by_design"
 SOURCES = [("https://github.com/sscs-ose/sscs-ose-code-a-chip.github.io.git", "main", SUB),
            ("https://github.com/byungkim113/sscs-ose-code-a-chip.github.io.git", "isscc27-fingerprint-by-design", SUB),
-           ("https://github.com/byungkim113/Code-A-Chip.git", "main", "notebook")]
+           ("https://github.com/byungkim113/Fingerprint-By-Design.git", "main", "notebook")]
 HERE = os.path.abspath(".")
 # A project-root launch also has data/, but that folder holds the older block studies.
 for candidate in (HERE, os.path.join(HERE, "notebook")):
@@ -773,7 +773,7 @@ md(r"""
 ## 11. Reproducing the results
 
 The full project, with every script, layout generator and result file, is at
-[github.com/byungkim113/Code-A-Chip](https://github.com/byungkim113/Code-A-Chip). The project log (`PLAN.md`) records
+[github.com/byungkim113/Fingerprint-By-Design](https://github.com/byungkim113/Fingerprint-By-Design). The project log (`PLAN.md`) records
 every pre-registration, result, bug and correction in order.
 
 **Recommended tool versions** (the versions every result here was produced with):

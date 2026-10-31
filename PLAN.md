@@ -1068,7 +1068,7 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   6.3e-3 vs ours 6.6e-3 (25 vs 26 noise units at 30 dB). Default mode from the submission folder alone on x86 Linux:
   0 errors, 11 figures, gdstk wheel installed by the setup cell (gdstk has no aarch64 Linux wheel -> the notebook
   falls back to saved pictures; tested).
-  FOUND: github.com/byungkim113/Code-A-Chip is PRIVATE -> judges cannot clone it (data fetch, Colab badge, and the
+  FOUND: github.com/byungkim113/Fingerprint-By-Design is PRIVATE -> judges cannot clone it (data fetch, Colab badge, and the
   "Reproducing" links). Fix applied: the submission folder is self-contained (data/, gds/, images/, setup_tools.sh,
   and sim/ = 6 unchanged copies of the scripts the live demo needs); the setup cell fetches the folder from the
   official repo, then the user's fork branch isscc27-fingerprint-by-design, then Code-A-Chip. Colab badge -> fork
