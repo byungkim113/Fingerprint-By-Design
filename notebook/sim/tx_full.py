@@ -43,7 +43,8 @@ VDD = float(VARIANT[3] + "." + VARIANT[4:]) if VARIANT.startswith("vdd") else 1.
 # (sim/ldo.py, bandgap reference) from an external VIN of 3.30 / 2.97 ... V; data bits stay at 1.8 V
 LDO = VARIANT.startswith("ldo")
 VIN_EXT = float(VARIANT[3] + "." + VARIANT[4:]) if LDO else None
-# mismatch sensitivity: scales every MOSFET mismatch term (SKY130 MC_MM_SWITCH multiplies them)
+# mismatch sensitivity: scales the mismatch of every device model that uses SKY130's MC_MM_SWITCH:
+# MOSFETs, poly resistors (xhigh_po, high_po) and MIM capacitors; not the generic n-diffusion resistor
 MM_SCALE = float(os.environ.get("TX_MMSCALE", "1"))
 T_RISE = 0.2e-9
 NF, PF = "sky130_fd_pr__nfet_01v8", "sky130_fd_pr__pfet_01v8"

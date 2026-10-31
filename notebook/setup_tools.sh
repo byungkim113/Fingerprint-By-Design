@@ -10,9 +10,15 @@ TOOLS=${TOOLS:-$HOME/rffp-tools}
 mkdir -p "$TOOLS"
 
 python3 -m pip install -q "volare==0.20.6" numpy
-if [ ! -f "$HOME/.volare/sky130A/libs.tech/ngspice/sky130.lib.spice" ]; then
+# enable the pinned PDK version, also when a different SKY130 version is already installed and enabled
+enabled=$(volare output --pdk sky130 2>/dev/null || true)
+if [ "$enabled" != "$PDK_HASH" ] || [ ! -f "$HOME/.volare/sky130A/libs.tech/ngspice/sky130.lib.spice" ]; then
   volare enable --pdk sky130 "$PDK_HASH"
 fi
+if [ "$(volare output --pdk sky130)" != "$PDK_HASH" ] || ! grep -q "$PDK_HASH" "$HOME/.volare/sky130A/SOURCES"; then
+  echo "SKY130 PDK version check failed: expected $PDK_HASH" >&2; exit 1
+fi
+echo "SKY130 PDK $PDK_HASH enabled"
 
 if ! "$TOOLS/ngspice/bin/ngspice" -v 2>/dev/null | grep -q "ngspice-$NGSPICE_VERSION"; then
   if ! command -v bison >/dev/null || ! command -v flex >/dev/null || ! command -v make >/dev/null; then

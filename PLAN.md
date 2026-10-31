@@ -1147,3 +1147,11 @@ Submission: PR to sscs-ose/sscs-ose-code-a-chip.github.io under
   Backup verified 2026-10-25 22:29: sim_work_waveforms_2026-10-25.tar.zst, 8.70 GB (zstd -6), zstd -t OK, 1,452 files,
   names and sizes identical to sim/work, no zero-byte files. Old 2026-10-11 backup (13.6 GB) still present.
   Old 2026-10-11 backup deleted on user request (2026-10-25); the verified 2026-10-25 backup is the only copy.
+- 2026-10-30: REVIEW FOLLOW-UP. (1) Withdrawn: the post hoc "70% transistor / 30% passive" split of the fingerprint
+  (Result 2). TX_MMSCALE sets MC_MM_SWITCH, which scales the mismatch of the poly resistors (xhigh_po, high_po) and
+  MIM capacitors as well as the MOSFETs (checked in the PDK model files; the generic n-diffusion resistor is the
+  exception), so the 0.5x/2x sweep cannot separate transistor from passive mismatch. The robustness conclusion (PA
+  effect and supply-over-temperature ranking hold for 0.5x-2x of all switch-controlled mismatch) stands; notebook text
+  and the tx_full.py comment corrected. (2) setup_tools.sh now enables the pinned PDK even when another SKY130 version
+  is enabled, and fails unless `volare output` and sky130A/SOURCES show c6d73a35 (tested in Ubuntu 22.04 with
+  8afc8346 enabled first: switched and confirmed; second run idempotent).

@@ -71,9 +71,8 @@ md(r"""
 
 The main tests were **pre-registered**: the prediction and the pass/fail rule were written into the project log
 *before* the simulations ran. Several predictions failed, and we report them as failures. Analyses chosen after seeing
-data are labelled **post hoc** or **exploratory** where they appear (for example the 70/30 split of the mismatch in
-Result 2, drift model B v2 on the first chip set, the burst-length analysis in Result 1, and the extra regulator
-start-up ramps).
+data are labelled **post hoc** or **exploratory** where they appear (for example drift model B v2 on the first chip
+set, the burst-length analysis in Result 1, and the extra regulator start-up ramps).
 """)
 
 md(r"""
@@ -511,10 +510,9 @@ The right chart shows **energy**, which is squared feature magnitude: the PA-to-
 RF-to-mixer ratio is 7.50x. The corresponding feature-norm ratios are about 2.69x and 2.74x, not 7x amplitude gains.
 LO quadrature errors contribute almost nothing in this analysis because the limiters square up the LO.
 
-A later experiment refined this picture: the PA does not only amplify upstream mismatch, its own transistor mismatch is
-a large part of the fingerprint too (Result 3). And a sensitivity study, re-running chips with the PDK's mismatch
-scaled by 0.5x and 2x, suggests (from a simple fit we made after seeing the data) that about 70% of the fingerprint
-comes from transistor mismatch and about 30% from resistor and capacitor mismatch, mostly in the PA loads.
+A later experiment showed that the PA does not only amplify upstream mismatch, its own mismatch is a large part of the
+fingerprint too (Result 3). We don't split the fingerprint further into transistor and passive contributions because
+the PDK's mismatch-scaling switch acts on transistors, poly resistors and MIM capacitors together.
 
 This also explains a failure from early in the project: a fast "block-by-block" Python model of the transmitter, built
 from separate block simulations, matched the real circuit only up to the mixer (correlation 0.9) and fell to 0.5 at
@@ -559,8 +557,8 @@ md(r"""
   the RF fingerprint only dropped to 0.85x. The PA's own mismatch dominates, so making the DAC better matched barely
   matters. We had underestimated the PA as a *source* of fingerprint, and this experiment is how we found out.
 
-**Does this depend on the exact mismatch model?** We re-ran the key comparisons with the PDK's transistor mismatch
-scaled by 0.5x and 2x. The linear-PA effect (0.64x at both scales) and the supply-versus-temperature ranking (Result 5)
+**Does this depend on the exact mismatch model?** We re-ran the key comparisons with the PDK's mismatch (transistors,
+poly resistors and MIM capacitors) scaled by 0.5x and 2x. The linear-PA effect (0.64x at both scales) and the supply-versus-temperature ranking (Result 5)
 held across that 4x range.
 """)
 
