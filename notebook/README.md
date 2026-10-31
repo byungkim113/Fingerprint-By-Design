@@ -36,13 +36,6 @@ We then simulated hundreds of Monte Carlo "virtual chips" at transistor level. K
 The main tests were pre-registered (prediction and pass rule written down before running) and failures are reported;
 analyses chosen after seeing data are labelled post hoc or exploratory in the notebook.
 
-**Verification correction (found 2026-10-24, fixed 2026-10-25):** a review by co-author Yucheng Wang found that the original LVS
-check ignored Netgen's device-property errors. Seven devices were drawn at different sizes from the design; the most
-important was the LDO soft-start capacitor (30 x 30 um instead of 70 x 70 um, because Magic's generator silently caps a
-plate at 30 um), which made the extracted regulator overshoot to 2.13-2.38 V at power-up. The layout was corrected
-(3 x 2 capacitor array, lengthened resistors, coupling capacitors set to the drawn 30 um) and now passes strict LVS; the
-extracted regulator peaks at 1.80-1.93 V over -40/27/85 C and 1-200 us ramps (limit 1.95 V).
-
 ## Contents
 
 | Path | What it is |
