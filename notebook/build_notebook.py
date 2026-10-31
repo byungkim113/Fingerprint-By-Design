@@ -754,9 +754,9 @@ md(r"""
    range at 30 dB, but did not solve arbitrary-data identification under temperature drift.
 4. **Validate behavioural models against the full circuit.** Our early block model reproduced the fingerprint
    reasonably well up to the mixer, but its RF-output correlation fell to 0.5. It missed the PA's contribution.
-5. **Check radio performance and fingerprint variation separately after extraction.** Wiring parasitics initially
-   caused a large I/Q phase error. After the layout correction, the extracted population's fingerprint size was
-   close to the schematic value.
+5. **Check radio performance and fingerprint variation separately after extraction.** The earlier extracted core
+   retained a similar fingerprint size despite a large common I/Q error. Retuning the quadrature network improved
+   nominal signal quality. These checks assess different properties: fingerprint variation and modulation accuracy.
 """)
 
 # ---------------------------------------------------------------- reproducibility
