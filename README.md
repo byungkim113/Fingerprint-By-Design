@@ -11,7 +11,7 @@ This is the full project behind the IEEE SSCS Code-a-Chip (ISSCC 2027) notebook 
 | LDO start-up | Extracted layout peaks 1.80-1.93 V for -40/27/85 C and 1-200 us ramps (limit 1.95 V). C-only extraction, typical process, no mismatch; 17 mV margin at 85 C / 50 us. The schematic does not converge from exactly 0 V at 85 C |
 | Digital front end (`digital/`, 290 x 301 um) | LibreLane: timing met at 9 corners, DRC/LVS clean; 947/947 checks at RTL and gate level; not yet integrated with the analog core; no pads |
 | Studies | Transistor-level Monte Carlo identification, attribution, design variants, supply/temperature drift, LDO tests; results in `results/`, log of every pre-registration and correction in [`PLAN.md`](PLAN.md) |
-| Review | Independent review and fix evidence in [`review/REVIEW.md`](review/REVIEW.md) |
+| Review | Review by co-author Yucheng Wang, and fix evidence, in [`review/REVIEW.md`](review/REVIEW.md) |
 
 Identification results use a known 128-sample frame repeated 18 times per decision (2,304 samples, 92 us); see the
 notebook, Section 2 and Result 1, for the protocol and the accuracy with shorter bursts.

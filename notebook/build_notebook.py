@@ -198,7 +198,7 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
   1.95 V in every case we tested: -40, 27 and 85 C with 1, 10, 50 and 200 us supply ramps to 3.63 V (worst case
   1.933 V at 85 C with a 50 us ramp, so the margin is thin).
 
-**Correction.** An independent review found that our first LVS check had passed six devices drawn at the wrong
+**Correction.** A review by co-author Yucheng Wang found that our first LVS check had passed six devices drawn at the wrong
 size, including the regulator's soft-start capacitor (30 x 30 um instead of 70 x 70 um). They were fixed, and the
 numbers above are for the corrected layout; Appendix A gives the details.
 
@@ -454,7 +454,7 @@ Each point rests on a finite number of decisions: 480 for 16 chips and 1,920 for
 30 dB and 89.5-92.1% at 20 dB. These intervals cover the receiver noise only: the chips themselves are one fixed set
 of Monte Carlo draws.
 
-**How much averaging does this need?** *(Post hoc: added after an independent review asked for it.)* The plot below
+**How much averaging does this need?** *(Post hoc: added after a review pass asked for it.)* The plot below
 reruns exactly the same analysis with 1 to 18 frames per burst; the 18-frame points reproduce the numbers above.
 """)
 code(r"""
@@ -854,7 +854,7 @@ None.
 
 ## Appendix A: layout verification correction
 
-Found in an independent review on 2026-10-24 and fixed on 2026-10-25. An independent review of this project
+Found on 2026-10-24 in a review of the verification by co-author Yucheng Wang, and fixed on 2026-10-25. The review
 found that our layout check had passed a layout whose device sizes did not all match the design: Netgen reported
 "match uniquely *with property errors*", and our script stopped reading after "match uniquely". Six devices differed:
 
