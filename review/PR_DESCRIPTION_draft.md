@@ -12,8 +12,7 @@
 
 ### Question
 
-Can a circuit designer predict, explain and control a transmitter's RF fingerprint — the chip-to-chip differences a
-receiver uses to recognise a device — at design time, using only the open PDK, before any silicon exists?
+Can a circuit designer predict, explain and control a transmitter's fingerprint at design time, using only the open PDK, before any silicon exists?
 
 ### What was built (SKY130, open-source tools only)
 
