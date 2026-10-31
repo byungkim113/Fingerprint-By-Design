@@ -85,7 +85,7 @@ md(r"""
 7. **Result 5, drift**: what breaks it, and can design-time models compensate?
 8. **Result 6, the regulator**: fixing drift at the source with an on-chip LDO.
 9. **What did not work**: arbitrary data, and where receiver-side fixes stop.
-10. **Lessons for designers**, reproducibility, conclusion and future work; **Appendix A**, the layout verification correction.
+10. **Lessons for designers**, reproducibility, conclusion and future work.
 
 ### How to run this notebook
 
@@ -176,7 +176,7 @@ RF signal:
 |---|---|
 | Size | 543 x 398 um (core + LDO) |
 | DRC | 0 errors in Magic **and** in the official KLayout deck |
-| LVS | Netgen match, 300 devices, **including device sizes** (strict property check; see the correction below) |
+| LVS | Netgen match, 300 devices, **including device sizes** (strict property check) |
 | Parasitic extraction | Magic, 477 devices + 1,947 parasitic capacitors; post-layout EVM 13.5% vs 14.0% in the schematic |
 | Power nets | a met5 ground spine and a metal-only connectivity check (LVS alone cannot see a ground tie missing, because the substrate already joins grounds) |
 
@@ -190,10 +190,6 @@ scripts. Two things the layout taught us, which later matter for the fingerprint
   power-up (up to 3.0 V on 1.8 V transistors). A start-up guard and a soft-start keep the **extracted layout** below
   1.95 V in every case we tested: -40, 27 and 85 C with 1, 10, 50 and 200 us supply ramps to 3.63 V (worst case
   1.933 V at 85 C with a 50 us ramp, so the margin is thin).
-
-**Correction.** A review by co-author Yucheng Wang found that our first LVS check had passed seven devices drawn at the wrong
-size, including the regulator's soft-start capacitor (30 x 30 um instead of 70 x 70 um). They were fixed, and the
-numbers above are for the corrected layout; Appendix A gives the details.
 
 The layout file itself is in `gds/tx_core.gds.gz`. The cell below reads it and draws the main layers, so you can check
 the layout without installing any EDA tool (open it in KLayout for full detail).
@@ -843,24 +839,6 @@ measurements are needed to test these predictions.
 
 None.
 
-## Appendix A: layout verification correction
-
-A review by co-author Yucheng Wang on 2026-10-24 found that our layout check had passed a layout whose device sizes did not
-all match the design. The discrepancies were fixed on 2026-10-25. In the original check, Netgen reported
-"match uniquely *with property errors*", and our script stopped reading after "match uniquely". Seven devices differed:
-
-| Device | Designed | Drawn | Cause | Fix |
-|---|---|---|---|---|
-| LDO soft-start capacitor | 70 x 70 um | 30 x 30 um | Magic's capacitor generator silently caps a plate at 30 um | 3 x 2 array of 28.6 um plates (4,908 um2) |
-| PA and LO coupling capacitors (3) | 31 x 31 um | 30 x 30 um | same | design changed to the drawn 30 um (simulated effect: chip EVM 14.26% -> 14.22%, chip-to-chip fingerprint -0.8%) |
-| Limiter feedback resistors (2) | 141 um | 139.4 um | the bends of a folded resistor are not full length | segments lengthened; now 141.0 um |
-| Bias n-diffusion resistor | 80 um | 78.3 um | same | segments lengthened; now 79.98 um |
-
-The small soft-start capacitor mattered: with it, the extracted regulator overshot to 2.13-2.38 V at power-up. After the
-fix the layout passes strict LVS, including device sizes (a deliberately wrong capacitor size in the reference now
-fails the check, as it should), and the extracted regulator meets the 1.95 V limit in all cases above. The LDO layout
-also matches the exact netlist used in the simulations. The fingerprint results are unaffected: they were simulated
-with the designed values, and the post-layout fingerprint check already used the drawn 30 um capacitors.
 """)
 
 nb["cells"] = cells

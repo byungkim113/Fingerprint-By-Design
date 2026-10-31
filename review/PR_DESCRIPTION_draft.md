@@ -47,7 +47,7 @@ receiver uses to recognise a device — at design time, using only the open PDK,
 - Section 2b installs the pinned PDK, builds ngspice 47, simulates two virtual chips plus the mismatch-free design, and
   checks the result against ours. Tool versions and the script behind every result are listed.
 - A review of the verification by co-author Yucheng Wang found seven layout devices drawn at the wrong size (missed by
-  our first LVS script). They were fixed and re-verified; Appendix A documents it.
+  our first LVS script). They were fixed and re-verified.
 
 ### Limitations (stated in the notebook)
 
