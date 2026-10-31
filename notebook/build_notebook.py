@@ -299,8 +299,7 @@ protocol unless stated otherwise, and Result 1 shows how accuracy falls with sho
 **Keeping ourselves honest.** Before each main experiment we wrote down, in the project log, what we expected and the
 exact rule that would count as a pass. When a test failed we reported it. When we changed an analysis after seeing
 data we said so, labelled it post hoc, and where possible re-tested it on new chips; a few follow-up checks were never
-pre-registered and are labelled that way. This matters because with simulations it is easy to keep tweaking until
-something looks good.
+pre-registered and are labelled that way.
 """)
 
 # ---------------------------------------------------------------- 2b live
